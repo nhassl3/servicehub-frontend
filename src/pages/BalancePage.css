@@ -1,0 +1,114 @@
+.balance-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.balance-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.balance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.balance-card__label {
+  font-size: 0.875rem;
+}
+
+.balance-card__amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.balance-deposit__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.balance-deposit__form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.balance-deposit__input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.balance-deposit__currency {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.balance-deposit__input {
+  padding-left: 1.75rem;
+}
+
+/* Transactions */
+.balance-tx__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.balance-tx__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-tx__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: 1rem;
+}
+
+.balance-tx__item:last-child {
+  border-bottom: none;
+}
+
+.balance-tx__info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.balance-tx__comment {
+  font-size: 0.85rem;
+}
+
+.balance-tx__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.balance-tx__date {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .balance-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .balance-deposit__form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

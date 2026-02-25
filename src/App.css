@@ -1,0 +1,6 @@
+/* App-level overrides — keep minimal, put component styles in component CSS files */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

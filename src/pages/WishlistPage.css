@@ -1,0 +1,25 @@
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.wishlist-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wishlist-item__id {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.wishlist-item__id:hover {
+  text-decoration: underline;
+}
+
+.wishlist-item__date {
+  font-size: 0.8rem;
+}

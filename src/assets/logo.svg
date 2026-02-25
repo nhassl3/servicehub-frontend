@@ -1,0 +1,18 @@
+<svg width="320" height="80" viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="80" rx="16" fill="#0F172A"/>
+  
+  <!-- Hub icon -->
+  <circle cx="40" cy="40" r="18" fill="#38BDF8"/>
+  <circle cx="40" cy="40" r="6" fill="#0F172A"/>
+  
+  <!-- connecting lines -->
+  <line x1="40" y1="40" x2="20" y2="20" stroke="#38BDF8" stroke-width="2"/>
+  <line x1="40" y1="40" x2="60" y2="20" stroke="#38BDF8" stroke-width="2"/>
+  <line x1="40" y1="40" x2="20" y2="60" stroke="#38BDF8" stroke-width="2"/>
+  <line x1="40" y1="40" x2="60" y2="60" stroke="#38BDF8" stroke-width="2"/>
+
+  <!-- Text -->
+  <text x="80" y="48" font-family="Arial, sans-serif" font-size="28" fill="#E2E8F0">
+    Service<tspan fill="#38BDF8">Hub</tspan>
+  </text>
+</svg>
