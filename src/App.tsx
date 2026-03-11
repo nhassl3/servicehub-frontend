@@ -1,22 +1,23 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { CartProvider } from './context/CartContext';
-import { Layout } from './components/layout/Layout';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { Layout } from './components/layout/Layout'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { CartProvider } from './context/CartContext'
+import { ScrollToTop } from './hooks/useScrollToTop'
 
-import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { CatalogPage } from './pages/CatalogPage';
-import { ProductDetailPage } from './pages/ProductDetailPage';
-import { CartPage } from './pages/CartPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { OrdersPage } from './pages/OrdersPage';
-import { OrderDetailPage } from './pages/OrderDetailPage';
-import { WishlistPage } from './pages/WishlistPage';
-import { BalancePage } from './pages/BalancePage';
-import { SellerProfilePage } from './pages/SellerProfilePage';
-import { CreateSellerPage } from './pages/CreateSellerPage';
-import { SellerDashboardPage } from './pages/SellerDashboardPage';
+import { BalancePage } from './pages/BalancePage'
+import { CartPage } from './pages/CartPage'
+import { CatalogPage } from './pages/CatalogPage'
+import { CreateSellerPage } from './pages/CreateSellerPage'
+import { HomePage } from './pages/HomePage'
+import { LoginPage } from './pages/LoginPage'
+import { OrderDetailPage } from './pages/OrderDetailPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { ProductDetailPage } from './pages/ProductDetailPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { RegisterPage } from './pages/RegisterPage'
+import { SellerDashboardPage } from './pages/SellerDashboardPage'
+import { SellerProfilePage } from './pages/SellerProfilePage'
+import { WishlistPage } from './pages/WishlistPage'
 
 // Guard: redirect to /login if not authenticated
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -70,6 +71,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
+          <ScrollToTop />
           <AppRoutes />
         </CartProvider>
       </AuthProvider>
