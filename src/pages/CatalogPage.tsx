@@ -1,15 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { productsApi } from '../api/products';
-import { categoriesApi } from '../api/categories';
-import { ProductCard } from '../components/product/ProductCard';
-import { useDebounce } from '../hooks/useDebounce';
-import type { Category, Product } from '../types';
-import './CatalogPage.css';
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
+import { categoriesApi } from '../api/categories'
+import { productsApi } from '../api/products'
+import { ProductCard } from '../components/product/ProductCard'
+import { useDebounce } from '../hooks/useDebounce'
+import type { Category, Product } from '../types'
+import './CatalogPage.css'
 
 const PAGE_SIZE = 12;
 
 export function CatalogPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,23 +31,26 @@ export function CatalogPage() {
     categoriesApi.list().then(d => setCategories(d.categories ?? []));
   }, []);
 
+  const categoryId = useMemo(
+    () => categories.find(c => c.slug === categorySlug)?.id,
+    [categories, categorySlug],
+  );
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const selectedCategory = categories.find(c => c.slug === categorySlug);
-      const params = {
-        limit: PAGE_SIZE,
-        offset: page * PAGE_SIZE,
-        ...(selectedCategory ? { category_id: selectedCategory.id } : {}),
-        ...(minPrice ? { min_price: parseFloat(minPrice) } : {}),
-        ...(maxPrice ? { max_price: parseFloat(maxPrice) } : {}),
-      };
-
       if (debouncedQuery.trim()) {
         const d = await productsApi.search(debouncedQuery.trim(), PAGE_SIZE, page * PAGE_SIZE);
         setProducts(d.products ?? []);
         setTotal(d.total);
       } else {
+        const params = {
+          limit: PAGE_SIZE,
+          offset: page * PAGE_SIZE,
+          ...(categoryId ? { category_id: categoryId } : {}),
+          ...(minPrice ? { min_price: parseFloat(minPrice) } : {}),
+          ...(maxPrice ? { max_price: parseFloat(maxPrice) } : {}),
+        };
         const d = await productsApi.list(params);
         setProducts(d.products ?? []);
         setTotal(d.total);
@@ -53,17 +58,17 @@ export function CatalogPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, categorySlug, minPrice, maxPrice, page, categories]);
+  }, [debouncedQuery, categoryId, minPrice, maxPrice, page]);
 
   useEffect(() => {
-    if (categories.length > 0 || !categorySlug) {
-      load();
-    }
-  }, [load, categories.length, categorySlug]);
+    if (categorySlug && categoryId === undefined) return;
+    load();
+  }, [load, categorySlug, categoryId]);
 
   const handleCategoryChange = (slug: string) => {
     setCategorySlug(slug);
     setPage(0);
+    setQuery('');
     const params: Record<string, string> = {};
     if (slug) params.category = slug;
     if (debouncedQuery) params.q = debouncedQuery;
@@ -77,12 +82,12 @@ export function CatalogPage() {
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
       <aside className="catalog__sidebar">
         <div className="card catalog__filter">
-          <h3 className="catalog__filter-title">Categories</h3>
+          <h3 className="catalog__filter-title">{t('catalog.categories')}</h3>
           <button
             className={`catalog__cat-btn${!categorySlug ? ' active' : ''}`}
             onClick={() => handleCategoryChange('')}
           >
-            All Categories
+            {t('catalog.allCategories')}
           </button>
           {categories.map(cat => (
             <button
@@ -96,12 +101,12 @@ export function CatalogPage() {
         </div>
 
         <div className="card catalog__filter" style={{ marginTop: '1rem' }}>
-          <h3 className="catalog__filter-title">Price Range</h3>
+          <h3 className="catalog__filter-title">{t('catalog.priceRange')}</h3>
           <div className="catalog__price-row">
             <input
               className="input catalog__price-input"
               type="number"
-              placeholder="Min"
+              placeholder={t('catalog.min')}
               value={minPrice}
               onChange={e => { setMinPrice(e.target.value); setPage(0); }}
               min="0"
@@ -110,7 +115,7 @@ export function CatalogPage() {
             <input
               className="input catalog__price-input"
               type="number"
-              placeholder="Max"
+              placeholder={t('catalog.max')}
               value={maxPrice}
               onChange={e => { setMaxPrice(e.target.value); setPage(0); }}
               min="0"
@@ -125,12 +130,12 @@ export function CatalogPage() {
           <input
             className="input catalog__search"
             type="text"
-            placeholder="Search products…"
+            placeholder={t('catalog.searchPlaceholder')}
             value={query}
             onChange={e => { setQuery(e.target.value); setPage(0); }}
           />
           <span className="text-muted catalog__count">
-            {total} result{total !== 1 ? 's' : ''}
+            {t('catalog.result', { count: total })}
           </span>
         </div>
 
@@ -140,11 +145,11 @@ export function CatalogPage() {
           </div>
         ) : products.length === 0 ? (
           <div className="catalog__empty">
-            <p className="text-muted">No products found.</p>
+            <p className="text-muted">{t('catalog.noProducts')}</p>
           </div>
         ) : (
           <div className="grid-products">
-            {products.map(p => <ProductCard key={p.id} product={p} />)}
+            {products.map(p => <ProductCard key={p.id} product={p} slug={categories[p.category_id-1].slug} />)}
           </div>
         )}
 
@@ -156,7 +161,7 @@ export function CatalogPage() {
               disabled={page === 0}
               onClick={() => setPage(p => p - 1)}
             >
-              ← Prev
+              {t('catalog.prev')}
             </button>
             <span className="text-muted">
               {page + 1} / {totalPages}
@@ -166,7 +171,7 @@ export function CatalogPage() {
               disabled={page >= totalPages - 1}
               onClick={() => setPage(p => p + 1)}
             >
-              Next →
+              {t('catalog.next')}
             </button>
           </div>
         )}

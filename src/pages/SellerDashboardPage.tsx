@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { productsApi } from '../api/products'
 import { sellersApi } from '../api/sellers'
@@ -23,6 +24,7 @@ const EMPTY_FORM: CreateProductForm = {
 };
 
 export function SellerDashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [seller, setSeller] = useState<Seller | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,15 +34,32 @@ export function SellerDashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    if (!user) return;
-    sellersApi.getProfile(user.username).then(d => setSeller(d.seller)).catch(() => {});
-    productsApi.list({ seller_id: user.username, limit: 50, offset: 0 })
-      .then(d => setProducts(d.products ?? []))
-      .finally(() => setLoadingProducts(false));
-  }, [user]);
+  const stars = (rating: number | null | undefined) => '★'.repeat(Math.round(rating || 0)) + '☆'.repeat(5 - Math.round(rating || 0));
 
-  const handleCreate = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!user?.username) return;
+    let cancelled = false;
+    sellersApi.getProfileByUsername(user.username)
+      .then(d => { if (!cancelled) setSeller(d.seller); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user?.username]);
+
+  useEffect(() => {
+    if (!seller?.id) {
+      setProducts([]);
+      setLoadingProducts(false);
+      return;
+    }
+    let cancelled = false;
+    setLoadingProducts(true);
+    productsApi.list({ seller_id: seller.id, limit: 50, offset: 0 })
+      .then(d => { if (!cancelled) setProducts(d.products ?? []); })
+      .finally(() => { if (!cancelled) setLoadingProducts(false); });
+    return () => { cancelled = true; };
+  }, [seller?.id]);
+
+  const handleCreate = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setFormError('');
     setSubmitting(true);
@@ -56,7 +75,7 @@ export function SellerDashboardPage() {
       setForm(EMPTY_FORM);
       setShowForm(false);
     } catch (err: any) {
-      setFormError(err?.response?.data?.error ?? 'Failed to create product');
+      setFormError(err?.response?.data?.error ?? t('seller.failedCreate'));
     } finally {
       setSubmitting(false);
     }
@@ -71,9 +90,9 @@ export function SellerDashboardPage() {
     return (
       <div className="container section">
         <div className="card orders-empty">
-          <p className="text-muted">You need to be a seller to access the dashboard.</p>
+          <p className="text-muted">{t('seller.needSeller')}</p>
           <Link to="/sellers/create" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            Become a Seller
+            {t('seller.becomeSeller')}
           </Link>
         </div>
       </div>
@@ -85,26 +104,26 @@ export function SellerDashboardPage() {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="dashboard-header">
         <div>
-          <h1 className="page-title" style={{ marginBottom: 0 }}>Seller Dashboard</h1>
+          <h1 className="page-title" style={{ marginBottom: 0 }}>{t('seller.dashboard')}</h1>
           {seller && (
             <p className="text-muted" style={{ marginTop: '0.25rem' }}>
-              {seller.display_name} · {seller.total_sales} sales · {seller.rating.toFixed(1)}★
+              {seller.display_name} · {seller.total_sales || 0} {t('seller.sales')} · {stars(seller.rating)} ({seller.rating ? seller.rating.toFixed(1) : 0} {t('seller.rating')})
             </p>
           )}
         </div>
         <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>
-          {showForm ? 'Cancel' : '+ New Product'}
+          {showForm ? t('seller.cancel') : t('seller.newProduct')}
         </button>
       </div>
 
       {/* ── Create Form ───────────────────────────────────────────────────── */}
       {showForm && (
         <div className="card dashboard-form">
-          <h2 className="dashboard-form__title">Create Product</h2>
+          <h2 className="dashboard-form__title">{t('seller.createProduct')}</h2>
           {formError && <div className="auth-error">{formError}</div>}
           <form onSubmit={handleCreate} className="auth-form">
             <div className="form-group">
-              <label className="form-label">Title</label>
+              <label className="form-label">{t('seller.productTitle')}</label>
               <input
                 className="input"
                 placeholder="My API Service"
@@ -114,10 +133,10 @@ export function SellerDashboardPage() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Description</label>
+              <label className="form-label">{t('seller.description')}</label>
               <textarea
                 className="input"
-                placeholder="Describe your product…"
+                placeholder={t('seller.descPlaceholder')}
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={4}
@@ -127,7 +146,7 @@ export function SellerDashboardPage() {
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Price ($)</label>
+                <label className="form-label">{t('seller.price')}</label>
                 <input
                   className="input"
                   type="number"
@@ -140,7 +159,7 @@ export function SellerDashboardPage() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Category ID</label>
+                <label className="form-label">{t('seller.categoryId')}</label>
                 <input
                   className="input"
                   type="number"
@@ -153,7 +172,7 @@ export function SellerDashboardPage() {
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Tags (comma-separated)</label>
+              <label className="form-label">{t('seller.tags')}</label>
               <input
                 className="input"
                 placeholder="api, rest, json"
@@ -162,7 +181,7 @@ export function SellerDashboardPage() {
               />
             </div>
             <button className="btn btn-primary" type="submit" disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create Product'}
+              {submitting ? t('seller.creating') : t('seller.createProduct')}
             </button>
           </form>
         </div>
@@ -170,23 +189,23 @@ export function SellerDashboardPage() {
 
       {/* ── Products table ────────────────────────────────────────────────── */}
       <div className="card dashboard-products">
-        <h2 className="dashboard-products__title">My Products ({products.length})</h2>
+        <h2 className="dashboard-products__title">{t('seller.myProducts', { count: products.length })}</h2>
 
         {loadingProducts ? (
           <div className="flex-center" style={{ padding: '2rem' }}>
             <div className="spinner" />
           </div>
         ) : products.length === 0 ? (
-          <p className="text-muted">You have no products yet. Create your first one!</p>
+          <p className="text-muted">{t('seller.noProducts')}</p>
         ) : (
           <div className="dashboard-table">
             <div className="dashboard-table__header">
-              <span>Product</span>
-              <span>Price</span>
-              <span>Status</span>
-              <span>Sales</span>
-              <span>Rating</span>
-              <span>Actions</span>
+              <span>{t('seller.tableProduct')}</span>
+              <span>{t('seller.tablePrice')}</span>
+              <span>{t('seller.tableStatus')}</span>
+              <span>{t('seller.tableSales')}</span>
+              <span>{t('seller.tableRating')}</span>
+              <span>{t('seller.tableActions')}</span>
             </div>
             {products.map(p => (
               <div key={p.id} className="dashboard-table__row">
@@ -199,14 +218,14 @@ export function SellerDashboardPage() {
                     {p.status}
                   </span>
                 </span>
-                <span>{p.sales_count}</span>
-                <span>{p.rating.toFixed(1)}★</span>
+                <span>{p.sales_count || 0}</span>
+                <span>{p.rating ? p.rating.toFixed(1) : 0} ★</span>
                 <span>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => handleDelete(p.id)}
                   >
-                    Delete
+                    {t('seller.delete')}
                   </button>
                 </span>
               </div>

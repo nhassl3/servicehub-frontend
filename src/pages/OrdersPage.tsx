@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ordersApi } from '../api/orders';
-import type { Order } from '../types';
-import './OrdersPage.css';
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { ordersApi } from '../api/orders'
+import type { Order } from '../types'
+import './OrdersPage.css'
 
 const STATUS_CLASS: Record<string, string> = {
   pending:   'badge-warning',
@@ -12,6 +13,7 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 export function OrdersPage() {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -38,13 +40,13 @@ export function OrdersPage() {
 
   return (
     <div className="container section">
-      <h1 className="page-title">My Orders</h1>
+      <h1 className="page-title">{t('orders.title')}</h1>
 
       {orders.length === 0 ? (
         <div className="card orders-empty">
-          <p className="text-muted">You haven't placed any orders yet.</p>
+          <p className="text-muted">{t('orders.noOrders')}</p>
           <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            Browse Products
+            {t('orders.browseProducts')}
           </Link>
         </div>
       ) : (
@@ -65,7 +67,7 @@ export function OrdersPage() {
                 </div>
 
                 <div className="order-card__footer">
-                  <span className="text-muted">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+                  <span className="text-muted">{t('orders.item', { count: order.items?.length || 0 })}</span>
                   <span className="order-card__total">${order.total_amount.toFixed(2)}</span>
                 </div>
               </Link>
@@ -78,13 +80,13 @@ export function OrdersPage() {
                 className="btn btn-secondary btn-sm"
                 disabled={page === 0}
                 onClick={() => setPage(p => p - 1)}
-              >← Prev</button>
+              >{t('orders.prev')}</button>
               <span className="text-muted">{page + 1} / {totalPages}</span>
               <button
                 className="btn btn-secondary btn-sm"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(p => p + 1)}
-              >Next →</button>
+              >{t('orders.next')}</button>
             </div>
           )}
         </>

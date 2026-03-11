@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import { ordersApi } from '../api/orders';
 import type { Order } from '../types';
@@ -12,6 +13,7 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 export function OrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,16 +48,16 @@ export function OrderDetailPage() {
   if (!order) {
     return (
       <div className="container section">
-        <p className="text-muted">Order not found.</p>
-        <Link to="/orders" className="btn btn-primary" style={{ marginTop: '1rem' }}>Back to Orders</Link>
+        <p className="text-muted">{t('orderDetail.notFound')}</p>
+        <Link to="/orders" className="btn btn-primary" style={{ marginTop: '1rem' }}>{t('orderDetail.backToOrders')}</Link>
       </div>
     );
   }
 
   return (
     <div className="container section">
-      <Link to="/orders" className="product-detail__back text-muted">← Back to Orders</Link>
-      <h1 className="page-title">Order Details</h1>
+      <Link to="/orders" className="product-detail__back text-muted">{t('orderDetail.backToOrders')}</Link>
+      <h1 className="page-title">{t('orderDetail.title')}</h1>
 
       <div className="cart-layout">
         {/* ── Items ─────────────────────────────────────────────────────────── */}
@@ -67,7 +69,7 @@ export function OrderDetailPage() {
                   #{order.uid}
                 </div>
                 <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                  Placed {new Date(order.created_at).toLocaleString()}
+                  {t('orderDetail.placed', { date: new Date(order.created_at).toLocaleString() })}
                 </div>
               </div>
               <span className={`badge ${STATUS_CLASS[order.status] ?? 'badge-primary'}`}>
@@ -77,7 +79,7 @@ export function OrderDetailPage() {
           </div>
 
           <div className="card">
-            <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Items</h2>
+            <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('orderDetail.items')}</h2>
             {order.items.map(item => (
               <div key={item.id} className="profile-field">
                 <div>
@@ -96,14 +98,14 @@ export function OrderDetailPage() {
 
         {/* ── Summary ───────────────────────────────────────────────────────── */}
         <div className="cart-summary card">
-          <h2 className="cart-summary__title">Summary</h2>
+          <h2 className="cart-summary__title">{t('orderDetail.summary')}</h2>
           <div className="cart-summary__row">
-            <span className="text-muted">Items</span>
+            <span className="text-muted">{t('orderDetail.items')}</span>
             <span>{order.items.length}</span>
           </div>
           <div className="cart-summary__divider" />
           <div className="cart-summary__row cart-summary__total">
-            <span>Total</span>
+            <span>{t('orderDetail.total')}</span>
             <span className="text-primary">${order.total_amount.toFixed(2)}</span>
           </div>
 
@@ -114,7 +116,7 @@ export function OrderDetailPage() {
               onClick={handleCancel}
               disabled={cancelling}
             >
-              {cancelling ? 'Cancelling…' : 'Cancel Order'}
+              {cancelling ? t('orderDetail.cancelling') : t('orderDetail.cancelOrder')}
             </button>
           )}
         </div>

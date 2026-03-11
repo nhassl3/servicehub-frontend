@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { userApi } from '../api/users'
 import { useAuth } from '../context/AuthContext'
 import './ProfilePage.css'
 
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -22,15 +24,15 @@ export function ProfilePage() {
     e.preventDefault();
     setError('');
     if (form.new_password !== form.confirm) {
-      setError('Passwords do not match');
+      setError(t('profile.passwordsNoMatch'));
       return;
     }
     setLoading(true);
     try {
       await userApi.updatePassword(form.old_password, form.new_password);
-      setSuccess('Password changed successfully')
+      setSuccess(t('profile.passwordChanged'))
     } catch (err: any) {
-      setError(err?.response?.data?.error ?? 'Failed to change password');
+      setError(err?.response?.data?.error ?? t('profile.failedChangePassword'));
     } finally {
       setLoading(false);
     }
@@ -48,7 +50,7 @@ export function ProfilePage() {
 
   return (
     <div className="container section">
-      <h1 className="page-title">My Profile</h1>
+      <h1 className="page-title">{t('profile.title')}</h1>
 
       <div className="profile-layout">
         {/* ── Left: Avatar & Quick Nav ──────────────────────────────────────── */}
@@ -56,20 +58,20 @@ export function ProfilePage() {
           <div className="profile-avatar">{initials}</div>
           <div className="profile-sidebar__name">{user.full_name || user.username}</div>
           <div className="profile-sidebar__username text-muted">@{user.username}</div>
-          <span className={`badge ${roleBadgeClass} profile-sidebar__role`}>{user.role}</span>
+          <span className={`badge ${roleBadgeClass} profile-sidebar__role`}>{t(`profile.${user.role}Account`)}</span>
 
           <nav className="profile-sidebar__nav">
-            <Link to="/orders" className="profile-nav-link">My Orders</Link>
-            <Link to="/wishlist" className="profile-nav-link">Wishlist</Link>
-            <Link to="/balance" className="profile-nav-link">Balance</Link>
+            <Link to="/orders" className="profile-nav-link">{t('profile.myOrders')}</Link>
+            <Link to="/wishlist" className="profile-nav-link">{t('profile.wishlist')}</Link>
+            <Link to="/balance" className="profile-nav-link">{t('profile.balance')}</Link>
             {user.role === 'seller' && (
               <Link to="/seller/dashboard" className="profile-nav-link text-success">
-                Seller Dashboard
+                {t('profile.sellerDashboard')}
               </Link>
             )}
             {user.role === 'buyer' && (
               <Link to="/sellers/create" className="profile-nav-link text-primary">
-                Become a Seller
+                {t('profile.becomeSeller')}
               </Link>
             )}
           </nav>
@@ -82,38 +84,38 @@ export function ProfilePage() {
               className={`profile-tab${activeTab === 'info' ? ' active' : ''}`}
               onClick={() => setActiveTab('info')}
             >
-              Account Info
+              {t('profile.accountInfo')}
             </button>
             <button
               className={`profile-tab${activeTab === 'security' ? ' active' : ''}`}
               onClick={() => setActiveTab('security')}
             >
-              Security
+              {t('profile.security')}
             </button>
           </div>
 
           {activeTab === 'info' && (
             <div className="card profile-panel">
               <div className="profile-field">
-                <span className="form-label">Username</span>
+                <span className="form-label">{t('profile.username')}</span>
                 <span>{user.username}</span>
               </div>
               <div className="profile-field">
-                <span className="form-label">Full Name</span>
+                <span className="form-label">{t('profile.fullName')}</span>
                 <span>{user.full_name || '—'}</span>
               </div>
               <div className="profile-field">
-                <span className="form-label">Email</span>
+                <span className="form-label">{t('profile.email')}</span>
                 <span>{user.email}</span>
               </div>
               <div className="profile-field">
-                <span className="form-label">Member since</span>
+                <span className="form-label">{t('profile.memberSince')}</span>
                 <span>{new Date(user.created_at).toLocaleDateString()}</span>
               </div>
               <div className="profile-field">
-                <span className="form-label">Status</span>
+                <span className="form-label">{t('profile.status')}</span>
                 <span className={`badge ${user.is_active ? 'badge-success' : 'badge-error'}`}>
-                  {user.is_active ? 'Active' : 'Inactive'}
+                  {user.is_active ? t('profile.active') : t('profile.inactive')}
                 </span>
               </div>
             </div>
@@ -121,19 +123,19 @@ export function ProfilePage() {
 
           {activeTab === 'security' && (
             <div className="card profile-panel">
-              <h1>ChangePassword</h1>
+              <h1>{t('profile.changePassword')}</h1>
 
               {error && <div className="error">{error}</div>}
 
-              {success && <div className="success">Password changed successfully</div>}
+              {success && <div className="success">{success}</div>}
 
                <form className="auth-form" onSubmit={handleChangePassword}>
                 <div className="form-group">
-                  <label className="form-label">Old password</label>
+                  <label className="form-label">{t('profile.oldPassword')}</label>
                   <input
                     className="input"
                     type="password"
-                    placeholder="your old password"
+                    placeholder={t('profile.oldPasswordPlaceholder')}
                     value={form.old_password}
                     onChange={e => setForm(f => ({ ...f, old_password: e.target.value }))}
                     required
@@ -142,7 +144,7 @@ export function ProfilePage() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">New Password</label>
+                  <label className="form-label">{t('profile.newPassword')}</label>
                   <input
                     className="input"
                     type="password"
@@ -154,7 +156,7 @@ export function ProfilePage() {
                 </div>
 
                   <div className="form-group">
-                  <label className="form-label">Confirm new password</label>
+                  <label className="form-label">{t('profile.confirmNewPassword')}</label>
                   <input
                     className="input"
                     type="password"
@@ -166,9 +168,9 @@ export function ProfilePage() {
                 </div>
 
                 <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
-                  {loading ? 'Changing password…' : 'Change password'}
+                  {loading ? t('profile.changingPassword') : t('profile.changePassword')}
                 </button>
-              </form>          
+              </form>
             </div>
           )}
         </div>

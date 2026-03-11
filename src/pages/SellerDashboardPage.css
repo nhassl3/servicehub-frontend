@@ -61,6 +61,7 @@
 }
 
 .dashboard-table__title {
+  padding-left: 1rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

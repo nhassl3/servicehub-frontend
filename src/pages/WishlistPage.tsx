@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { wishlistApi } from '../api/wishlist';
 import type { WishlistItem } from '../types';
 import './WishlistPage.css';
 
 export function WishlistPage() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +31,13 @@ export function WishlistPage() {
 
   return (
     <div className="container section">
-      <h1 className="page-title">Wishlist</h1>
+      <h1 className="page-title">{t('wishlistPage.title')}</h1>
 
       {items.length === 0 ? (
         <div className="card orders-empty">
-          <p className="text-muted">Your wishlist is empty.</p>
+          <p className="text-muted">{t('wishlistPage.empty')}</p>
           <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            Browse Products
+            {t('wishlistPage.browseProducts')}
           </Link>
         </div>
       ) : (
@@ -46,13 +48,13 @@ export function WishlistPage() {
                 Product #{item.product_id.slice(0, 8)}…
               </Link>
               <span className="text-muted wishlist-item__date">
-                Added {new Date(item.created_at).toLocaleDateString()}
+                {t('wishlistPage.added', { date: new Date(item.created_at).toLocaleDateString() })}
               </span>
               <button
                 className="btn btn-danger btn-sm"
                 onClick={() => handleRemove(item.product_id)}
               >
-                Remove
+                {t('wishlistPage.remove')}
               </button>
             </div>
           ))}
