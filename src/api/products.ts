@@ -1,5 +1,5 @@
-import { apiClient } from './client';
-import type { Product } from '../types';
+import type { Product } from '../types'
+import { apiClient } from './client'
 
 export interface ListProductsParams {
   category_id?: number;
@@ -21,8 +21,8 @@ export const productsApi = {
     return res.data;
   },
 
-  search: async (q: string, limit = 20, offset = 0): Promise<{ products: Product[]; total: number }> => {
-    const res = await apiClient.get('/api/v1/products/search', { params: { q, limit, offset } });
+  search: async (query: string, limit = 20, offset = 0): Promise<{ products: Product[]; total: number }> => {
+    const res = await apiClient.get('/api/v1/products/search', { params: { query, limit, offset } });
     return res.data;
   },
 
