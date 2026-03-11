@@ -145,6 +145,10 @@
   color: var(--color-success);
 }
 
+.text-warning {
+  color: var(--color-warning);
+}
+
 .text-error {
   color: var(--color-error);
 }
@@ -160,4 +164,33 @@
   font-weight: 700;
   color: var(--color-text);
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .section {
+    padding: 2rem 0;
+  }
+
+  .grid-products {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-products {
+    grid-template-columns: 1fr;
+  }
+
+  .container {
+    padding: 1.5rem;
+  }
 }

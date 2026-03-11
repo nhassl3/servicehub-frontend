@@ -1,12 +1,13 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { cartApi } from '../api/cart';
-import type { Cart } from '../types';
-import { useAuth } from './AuthContext';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { cartApi } from '../api/cart'
+import type { Cart } from '../types'
+import { useAuth } from './AuthContext'
 
 interface CartContextValue {
   cart: Cart | null;
   itemCount: number;
   isLoading: boolean;
+  productInCart: (productId: string) => Promise<boolean>;
   addItem: (productId: string, qty?: number) => Promise<void>;
   removeItem: (productId: string) => Promise<void>;
   updateQty: (productId: string, qty: number) => Promise<void>;
@@ -58,8 +59,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
 
+  const productInCart = useCallback(async (productId: string) => {
+    return cart?.items.some(item => item.product_id === productId) ?? false;
+  }, [cart]);
+
   return (
-    <CartContext.Provider value={{ cart, itemCount, isLoading, addItem, removeItem, updateQty, clearCart, refreshCart }}>
+    <CartContext.Provider value={{ cart, itemCount, isLoading, productInCart, addItem, removeItem, updateQty, clearCart, refreshCart }}>
       {children}
     </CartContext.Provider>
   );

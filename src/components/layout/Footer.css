@@ -76,3 +76,34 @@
   color: var(--color-muted);
   font-size: 0.8rem;
 }
+
+@media (max-width: 768px) {
+  .footer__inner {
+    flex-direction: column;
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .footer__brand {
+    max-width: 100%;
+  }
+
+  .footer__socials {
+    justify-content: center;
+  }
+
+  .footer__links {
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer__inner {
+    padding: 2rem 1rem;
+  }
+
+  .footer__links {
+    gap: 1.5rem;
+  }
+}

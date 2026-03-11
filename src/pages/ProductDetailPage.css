@@ -110,17 +110,24 @@
 }
 
 .seller-preview__avatar {
-  width: 44px;
-  height: 44px;
+  width: 67px;
+  height: 67px;
   border-radius: var(--radius-full);
   background: var(--color-primary);
   color: #0F172A;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 2rem;
   font-weight: 700;
-  font-size: 1.1rem;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.seller-preview-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .seller-preview__name {

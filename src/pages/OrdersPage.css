@@ -52,3 +52,16 @@
   flex-direction: column;
   align-items: center;
 }
+
+@media (max-width: 640px) {
+  .order-card__header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .order-card__footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}

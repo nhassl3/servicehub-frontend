@@ -1,5 +1,5 @@
-import { apiClient } from './client';
-import type { Seller } from '../types';
+import type { Seller } from '../types'
+import { apiClient } from './client'
 
 export const sellersApi = {
   create: async (data: { display_name: string; description: string }): Promise<{ seller: Seller }> => {
@@ -7,8 +7,13 @@ export const sellersApi = {
     return res.data;
   },
 
-  getProfile: async (username: string): Promise<{ seller: Seller }> => {
-    const res = await apiClient.get(`/api/v1/sellers/${username}`);
+  getProfileByUsername: async (username: string): Promise<{ seller: Seller }> => {
+    const res = await apiClient.get(`/api/v1/sellers?username=${username}`);
+    return res.data;
+  },
+
+  getProfileByUUID: async (uuid: string): Promise<{ seller: Seller }> => {
+    const res = await apiClient.get(`/api/v1/sellers?seller_id=${uuid}`);
     return res.data;
   },
 

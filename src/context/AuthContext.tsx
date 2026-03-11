@@ -41,9 +41,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Inline the initial auth check with a cancellation flag so that React
+  // StrictMode's double-mount (dev-only) doesn't fire two /me requests.
   useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
+    let cancelled = false;
+    const token = tokenStorage.getAccessToken();
+    if (!token) { setIsLoading(false); return; }
+    authApi.getMe()
+      .then(({ user }) => { if (!cancelled) setUser(user); })
+      .catch(() => {
+        if (!cancelled && tokenStorage.getAccessToken() === token) {
+          tokenStorage.clearTokens();
+          setUser(null);
+        }
+      })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   // When the token refresh interceptor fails, it dispatches this event instead
   // of doing a hard window.location redirect that would race with in-flight logins

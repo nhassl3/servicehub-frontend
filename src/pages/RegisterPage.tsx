@@ -1,28 +1,71 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './AuthPage.css'
 
+const PATTERNS = {
+  username: /^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$/,
+  password: /^[a-zA-Z0-9!@#$%^&*()\-_=+\[\]{};:'",.<>?\\|`~]{8,}$/,
+  full_name: /^[A-Za-zА-Яа-яЁё\-' ]{2,100}$/,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+};
+
+type FormKey = 'username' | 'email' | 'full_name' | 'password' | 'confirm';
+
 export function RegisterPage() {
+  const { t } = useTranslation();
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
+
+  const [form, setForm] = useState<Record<FormKey, string>>({
     username: '',
     email: '',
     full_name: '',
     password: '',
     confirm: '',
   });
-  const [error, setError] = useState('');
+  const [touched, setTouched] = useState<Partial<Record<FormKey, boolean>>>({});
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const validate = (field: FormKey, value: string): string => {
+    if (!value) return t('validation.required');
+    if (field === 'confirm') return value === form.password ? '' : t('validation.confirm');
+    const pattern = PATTERNS[field as keyof typeof PATTERNS];
+    const messages: Record<string, string> = {
+      username: t('validation.usernameExample'),
+      password: t('validation.passwordDetail'),
+      full_name: t('validation.fullName'),
+      email: t('validation.email'),
+    };
+    return pattern && !pattern.test(value) ? messages[field] : '';
+  };
+
+  const errors: Record<FormKey, string> = {
+    username: validate('username', form.username),
+    email: validate('email', form.email),
+    full_name: validate('full_name', form.full_name),
+    password: validate('password', form.password),
+    confirm: validate('confirm', form.confirm),
+  };
+
+  const hasErrors = Object.values(errors).some(Boolean);
+
+  const set = (key: FormKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(f => ({ ...f, [key]: e.target.value }));
+  };
+
+  const touch = (key: FormKey) => () =>
+    setTouched(t => ({ ...t, [key]: true }));
+
+  const showError = (key: FormKey) => touched[key] && errors[key];
+
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-    if (form.password !== form.confirm) {
-      setError('Passwords do not match');
-      return;
-    }
+    setTouched({ username: true, email: true, full_name: true, password: true, confirm: true });
+    if (hasErrors) return;
+    setServerError('');
     setLoading(true);
     try {
       await register({
@@ -33,97 +76,59 @@ export function RegisterPage() {
       });
       navigate('/');
     } catch (err: any) {
-      setError(err?.response?.data?.error ?? 'Registration failed');
+      setServerError(err?.response?.data?.message.toLocaleUpperCase() ?? t('register.registrationFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm(f => ({ ...f, [key]: e.target.value }));
+  const field = (key: FormKey, label: string, type: string, placeholder: string, extra?: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      <input
+        className={`input${showError(key) ? ' input--error' : touched[key] && !errors[key] ? ' input--valid' : ''}`}
+        type={type}
+        placeholder={placeholder}
+        value={form[key]}
+        onChange={set(key)}
+        onBlur={touch(key)}
+        {...extra}
+      />
+      {showError(key) && <span className="field-error">{errors[key]}</span>}
+    </div>
+  );
 
   return (
     <div className="auth-page">
       <div className="auth-card card">
         <div className="auth-header">
-          <h1 className="auth-title">Create account</h1>
-          <p className="text-muted">Join ServiceHub and start buying or selling</p>
+          <h1 className="auth-title">{t('register.title')}</h1>
+          <p className="text-muted">{t('register.subtitle')}</p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        {serverError && <div className="auth-error flex-center">{serverError}</div>}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Username</label>
-              <input
-                className="input"
-                type="text"
-                placeholder="my_username"
-                value={form.username}
-                onChange={set('username')}
-                required
-                autoFocus
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input
-                className="input"
-                type="text"
-                placeholder="John Doe"
-                value={form.full_name}
-                onChange={set('full_name')}
-                required
-              />
-            </div>
+            {field('username', t('register.username'), 'text', 'john-doe', { autoFocus: true })}
+            {field('full_name', t('register.fullName'), 'text', 'John Doe')}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
-              className="input"
-              type="email"
-              placeholder="you@example.com"
-              value={form.email}
-              onChange={set('email')}
-              required
-            />
-          </div>
+          {field('email', t('register.email'), 'email', 'you@example.com')}
 
           <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <input
-                className="input"
-                type="password"
-                placeholder="••••••••"
-                value={form.password}
-                onChange={set('password')}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Confirm Password</label>
-              <input
-                className="input"
-                type="password"
-                placeholder="••••••••"
-                value={form.confirm}
-                onChange={set('confirm')}
-                required
-              />
-            </div>
+            {field('password', t('register.password'), 'password', '••••••••')}
+            {field('confirm', t('register.confirmPassword'), 'password', '••••••••')}
           </div>
 
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? t('register.creating') : t('register.createAccount')}
           </button>
         </form>
 
         <p className="auth-footer text-muted">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary">Sign in</Link>
+          {t('register.hasAccount')}{' '}
+          <Link to="/login" className="text-primary">{t('register.signIn')}</Link>
         </p>
       </div>
     </div>

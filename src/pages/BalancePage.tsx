@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { balanceApi } from '../api/balance'
 import type { BalanceTransaction } from '../types'
 import './BalancePage.css'
 
 export function BalancePage() {
+  const { t } = useTranslation();
   const [balance, setBalance] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
   const [total, setTotal] = useState(0);
@@ -34,19 +36,18 @@ export function BalancePage() {
     e.preventDefault();
     setDepositError('');
     const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) { setDepositError('Enter a valid amount'); return; }
+    if (!amount || amount <= 0) { setDepositError(t('balancePage.invalidAmount')); return; }
     setDepositing(true);
     try {
       const { amount: newBalance } = await balanceApi.deposit(amount);
       setBalance(newBalance);
       setDepositAmount('');
-      // Reload transactions
       const txData = await balanceApi.getTransactions({ limit: PAGE_SIZE, offset: 0 });
       setTransactions(txData.transactions ?? []);
       setTotal(txData.total);
       setPage(0);
     } catch (err: any) {
-      setDepositError(err?.response?.data?.error ?? 'Deposit failed');
+      setDepositError(err?.response?.data?.error ?? t('balancePage.depositFailed'));
     } finally {
       setDepositing(false);
     }
@@ -64,20 +65,20 @@ export function BalancePage() {
 
   return (
     <div className="container section">
-      <h1 className="page-title">Balance</h1>
+      <h1 className="page-title">{t('balancePage.title')}</h1>
 
       <div className="balance-layout">
         {/* ── Balance card ──────────────────────────────────────────────────── */}
         <div className="balance-cards">
           <div className="card balance-card">
-            <div className="balance-card__label text-muted">Available Balance</div>
+            <div className="balance-card__label text-muted">{t('balancePage.available')}</div>
             <div className="balance-card__amount text-primary">
               ${(balance ?? 0).toFixed(2)}
             </div>
           </div>
 
           <div className="card balance-deposit">
-            <h2 className="balance-deposit__title">Deposit Funds</h2>
+            <h2 className="balance-deposit__title">{t('balancePage.depositFunds')}</h2>
             {depositError && <div className="auth-error">{depositError}</div>}
             <form className="balance-deposit__form" onSubmit={handleDeposit}>
               <div className="balance-deposit__input-wrap">
@@ -93,7 +94,7 @@ export function BalancePage() {
                 />
               </div>
               <button className="btn btn-primary" type="submit" disabled={depositing}>
-                {depositing ? 'Processing…' : 'Deposit'}
+                {depositing ? t('balancePage.depositing') : t('balancePage.deposit')}
               </button>
             </form>
           </div>
@@ -101,26 +102,26 @@ export function BalancePage() {
 
         {/* ── Transactions ──────────────────────────────────────────────────── */}
         <div className="card balance-tx">
-          <h2 className="balance-tx__title">Transaction History</h2>
+          <h2 className="balance-tx__title">{t('balancePage.txHistory')}</h2>
 
           {transactions.length === 0 ? (
-            <p className="text-muted">No transactions yet.</p>
+            <p className="text-muted">{t('balancePage.noTransactions')}</p>
           ) : (
             <div className="balance-tx__list">
               {transactions.map(tx => (
                 <div key={tx.id} className="balance-tx__item">
                   <div className="balance-tx__info">
-                    <span className={`badge ${tx.type === 'deposit' ? 'badge-success' : 'badge-error'}`}>
+                    <span className={`badge ${tx.type === 'deposit' ? 'badge-success' : ['commission', 'profit'].includes(tx.type) ? 'badge-warning' : 'badge-error'}`}>
                       {tx.type}
                     </span>
                     <span className="text-muted balance-tx__comment">{tx.comment || '—'}</span>
                   </div>
                   <div className="balance-tx__right">
-                    <span className={tx.type === 'deposit' ? 'text-success' : 'text-error'}>
-                      {tx.type === 'deposit' ? '+' : '−'}${tx.amount.toFixed(2)}
+                    <span className={tx.type === 'deposit' ? 'text-success' : ['commission', 'profit'].includes(tx.type) ? 'text-warning' : 'text-error'}>
+                      {['deposit', 'commission', 'profit'].includes(tx.type) ? '+' : '−'}${tx.amount.toFixed(2)}
                     </span>
                     <span className="text-muted balance-tx__date">
-                      {new Date(tx.created_at).toLocaleDateString('en-EN', {
+                      {new Date(tx.created_at).toLocaleDateString(undefined, {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -140,13 +141,13 @@ export function BalancePage() {
                 className="btn btn-secondary btn-sm"
                 disabled={page === 0}
                 onClick={() => setPage(p => p - 1)}
-              >← Prev</button>
+              >{t('balancePage.prev')}</button>
               <span className="text-muted">{page + 1} / {totalPages}</span>
               <button
                 className="btn btn-secondary btn-sm"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(p => p + 1)}
-              >Next →</button>
+              >{t('balancePage.next')}</button>
             </div>
           )}
         </div>

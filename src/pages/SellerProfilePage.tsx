@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { productsApi } from '../api/products'
 import { sellersApi } from '../api/sellers'
 import { ProductCard } from '../components/product/ProductCard'
+import { useAuth } from '../context/AuthContext'
 import type { Product, Seller } from '../types'
 import './SellerProfilePage.css'
 
 export function SellerProfilePage() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const { username } = useParams<{ username: string }>();
   const [seller, setSeller] = useState<Seller | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,7 +20,7 @@ export function SellerProfilePage() {
     if (!username) return;
     setLoading(true);
 
-    sellersApi.getProfile(username).then(async ({ seller }) => {
+    sellersApi.getProfileByUsername(username).then(async ({ seller }) => {
       setSeller(seller);
       const { products } = await productsApi.list({
         seller_id: seller.id,
@@ -38,13 +42,15 @@ export function SellerProfilePage() {
   if (!seller) {
     return (
       <div className="container section">
-        <p className="text-muted">Seller not found.</p>
-        <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Go Home</Link>
+        <div className="card">
+            <p className="text-muted">{t('sellerProfile.sellerNotFound')}</p>
+            <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>{t('sellerProfile.goHome')}</Link>
+        </div>
       </div>
     );
   }
 
-  const stars = '★'.repeat(Math.round(seller.rating)) + '☆'.repeat(5 - Math.round(seller.rating));
+  const stars = '★'.repeat(Math.round(seller.rating || 0)) + '☆'.repeat(5 - Math.round(seller.rating || 0));
   const initials = seller.display_name.slice(0, 2).toUpperCase();
 
   return (
@@ -68,26 +74,33 @@ export function SellerProfilePage() {
             <div className="seller-stat">
               <span className="seller-stat__stars">{stars}</span>
               <span className="text-muted seller-stat__label">
-                {seller.rating.toFixed(1)} rating
+                {seller.rating ? seller.rating.toFixed(1) : 0} {t('seller.rating')}
               </span>
             </div>
             <div className="seller-stat">
-              <span className="seller-stat__value">{seller.total_sales}</span>
-              <span className="text-muted seller-stat__label">total sales</span>
+              <span className="seller-stat__value">{seller.total_sales || 0}</span>
+              <span className="text-muted seller-stat__label">{t('sellerProfile.totalSales')}</span>
             </div>
             <div className="seller-stat">
               <span className="seller-stat__value">{products.length}</span>
-              <span className="text-muted seller-stat__label">products</span>
+              <span className="text-muted seller-stat__label">{t('sellerProfile.products')}</span>
             </div>
           </div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          {user?.username === username && (
+            <Link to="/seller/dashboard" className="btn btn-primary">
+              {t('sellerProfile.manageStore')}
+            </Link>
+          )}
         </div>
       </div>
 
       {/* ── Products ───────────────────────────────────────────────────────── */}
-      <h2 className="seller-products-title">Products by {seller.display_name}</h2>
+      <h2 className="seller-products-title">{t('sellerProfile.productsByTitle', { name: seller.display_name })}</h2>
       {products.length === 0 ? (
         <div className="card orders-empty">
-          <p className="text-muted">This seller has no products yet.</p>
+          <p className="text-muted">{t('sellerProfile.noProducts')}</p>
         </div>
       ) : (
         <div className="grid-products">

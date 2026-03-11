@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import { tokenStorage } from '../store/tokenStorage'
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:8080';
@@ -88,3 +88,27 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ─── GET request deduplication ────────────────────────────────────────────────
+// If the exact same GET request (URL + serialised params) is already in-flight,
+// return the existing promise instead of opening a second network connection.
+//
+// This makes React StrictMode's intentional double-firing of useEffect harmless
+// for every component in the app without any per-component boilerplate.
+{
+  const pending = new Map<string, Promise<any>>();
+  const _get = apiClient.get.bind(apiClient);
+
+  (apiClient as any).get = (url: string, config?: AxiosRequestConfig) => {
+    const key = config?.params
+      ? `${url}\0${JSON.stringify(config.params)}`
+      : url;
+
+    const hit = pending.get(key);
+    if (hit) return hit;
+
+    const req = _get(url, config).finally(() => pending.delete(key));
+    pending.set(key, req);
+    return req;
+  };
+}

@@ -62,6 +62,15 @@
   transition: color var(--transition);
 }
 
+.qty-btn:disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.qty-btn:disabled:hover {
+  color: var(--color-muted);
+}
+
 .qty-btn:hover {
   color: var(--color-primary);
 }
