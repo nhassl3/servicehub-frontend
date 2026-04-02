@@ -19,9 +19,8 @@
   position: absolute;
   inset: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% + .4rem);
   pointer-events: none;
-  filter: blur(72px) saturate(1.3);
   opacity: 0.55;
   mix-blend-mode: screen;
 }
