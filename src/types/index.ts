@@ -46,6 +46,16 @@ export interface Seller {
   updated_at: string;
 }
 
+export interface Admin { 
+  id: string;
+  username: string;
+  display_name: string;
+  level_rights: number;
+  total_moderation: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CartItem {
   id: number;
   product_id: string;
