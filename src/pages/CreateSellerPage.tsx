@@ -28,19 +28,19 @@ export function CreateSellerPage() {
     }
   };
 
-  if (user?.role === 'seller') {
+  if (user?.role === 'seller' || user?.role === 'admin') {
     return (
       <div className="flex-center" style={{ minHeight: '55vh' }}>
         <div className="auth-card card">
           <div className="auth-header">
-            <h1 className="auth-title">{t('createSeller.alreadySeller')}</h1>
-            <p className="text-muted">{t('createSeller.alreadyDesc')}</p>
+            <h1 className="auth-title">{t('createSeller.forbiddenCreateSeller')}</h1>
+            <p className="text-muted">{t('createSeller.forbiddenDesc')}</p>
           </div>
           <div className="auth-error flex-center">
             {t('createSeller.contactSupport')}
           </div>
           <div className="auth-actions">
-            <button className="btn btn-primary auth-submit" onClick={() => navigate('/seller/dashboard')}>
+            <button className="btn btn-primary auth-submit" onClick={() => navigate(user?.role === 'seller' ? '/seller/dashboard' : '/admin/dashboard')}>
               {t('createSeller.goToDashboard')}
             </button>
           </div>
