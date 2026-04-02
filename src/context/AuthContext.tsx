@@ -9,7 +9,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (data: { username: string; email: string; password: string; full_name: string }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -88,10 +88,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     const refreshToken = tokenStorage.getRefreshToken();
     if (refreshToken) {
-      authApi.logout(refreshToken).catch(() => {});
+      try {
+        await authApi.logout(refreshToken);
+      } catch {
+        // Best effort — if the token is expired and refresh also fails,
+        // we still clear local state below.
+      }
     }
     tokenStorage.clearTokens();
     setUser(null);
