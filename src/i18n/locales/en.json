@@ -102,6 +102,23 @@
     "cancelling": "Cancelling\u2026",
     "notFound": "Order not found."
   },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "manageUsers": "Manage Users",
+    "manageProducts": "Manage Products",
+    "siteSettings": "Site Settings",
+    "gotoProfile": "Go to Profile",
+    "userNotFound": "User not found",
+    "productNotFound": "Product not found",
+    "newUpload": "Upload Admin Avatar",
+    "uploadingAvatar": "Uploading\u2026",
+    "avatarChanged": "Avatar updated successfully",
+    "failedUploadAvatar": "Failed to upload avatar",
+    "uploadAvatarTitle": "Upload Admin Avatar",
+    "newProduct": "+ Check product",
+    "selectAvatar": "Select an image",
+    "uploadAvatar": "Upload"
+  },
   "profile": {
     "buyerAccount": "Buyer",
     "sellerAccount": "Seller",
@@ -114,6 +131,7 @@
     "becomeSeller": "Become a Seller",
     "accountInfo": "Account Info",
     "security": "Security",
+    "update": "Update account",
     "username": "Username",
     "fullName": "Full Name",
     "email": "Email",
@@ -127,6 +145,10 @@
     "newPassword": "New Password",
     "confirmNewPassword": "Confirm new password",
     "changingPassword": "Changing password\u2026",
+    "changingPhoto": "Changing photo\u2026",
+    "changePhoto": "Change photo",
+    "photoChanged": "Photo changed successfully",
+    "failedChangePhoto": "Failed to change photo",
     "passwordChanged": "Password changed successfully",
     "passwordsNoMatch": "Passwords do not match",
     "failedChangePassword": "Failed to change password"
@@ -191,6 +213,7 @@
     "sales": "sales",
     "rating": "rating",
     "newProduct": "+ New Product",
+    "newUpload": "+ Upload Avatar",
     "cancel": "Cancel",
     "createProduct": "Create Product",
     "productTitle": "Title",
@@ -211,7 +234,14 @@
     "delete": "Delete",
     "needSeller": "You need to be a seller to access the dashboard.",
     "becomeSeller": "Become a Seller",
-    "failedCreate": "Failed to create product"
+    "failedCreate": "Failed to create product",
+    "uploadAvatarTitle": "Upload Avatar",
+    "selectAvatar": "Select an image",
+    "uploadAvatar": "Upload",
+    "uploadingAvatar": "Uploading\u2026",
+    "avatarChanged": "Avatar updated successfully",
+    "failedUploadAvatar": "Failed to upload avatar",
+    "gotoProfile": "Go to Profile"
   },
   "createSeller": {
     "title": "Become a Seller",
@@ -222,8 +252,8 @@
     "descPlaceholder": "Tell buyers what you offer\u2026",
     "create": "Create Seller Profile",
     "creating": "Creating\u2026",
-    "alreadySeller": "You are already a seller!",
-    "alreadyDesc": "Your seller profile is already set up. You can view it or start adding products.",
+    "forbiddenCreateSeller": "You cannot create a seller profile",
+    "forbiddenDesc": "You already have a seller or admin account. You cannot create another seller profile",
     "contactSupport": "If you think this is a mistake, please contact support.",
     "goToDashboard": "Go to Dashboard"
   },
