@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { productsApi } from '../api/products'
@@ -15,6 +15,13 @@ export function SellerProfilePage() {
   const [seller, setSeller] = useState<Seller | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [modalClosing, setModalClosing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -31,6 +38,18 @@ export function SellerProfilePage() {
     }).finally(() => setLoading(false));
   }, [username]);
 
+  // useEffect to close upload modal on Escape key press
+  // working when modal is open and not when it's closing to prevent conflicts
+  // with the closing animation
+  useEffect(() => {
+    if (!showUploadModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeUploadModal();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showUploadModal]);
+
   if (loading) {
     return (
       <div className="flex-center" style={{ minHeight: '60vh' }}>
@@ -38,6 +57,38 @@ export function SellerProfilePage() {
       </div>
     );
   }
+
+  const handleUploadAvatar = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+    if (!avatarFile) return;
+    setUploadError('');
+    setUploadSuccess('');
+    setUploadingAvatar(true);
+    try {
+      const { seller: updated } = await sellersApi.uploadAvatar(avatarFile);
+      setSeller(updated);
+      setUploadSuccess(t('seller.avatarChanged'));
+      setAvatarFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err: any) {
+      setUploadError(err?.response?.data?.message.toUpperCase() ?? t('seller.failedUploadAvatar'));
+    } finally {
+      setUploadingAvatar(false);
+      window.location.reload();
+    }
+  };
+
+   const closeUploadModal = () => {
+    setModalClosing(true);
+    setTimeout(() => {
+      setShowUploadModal(false);
+      setModalClosing(false);
+      setAvatarFile(null);
+      setUploadError('');
+      setUploadSuccess('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }, 200);
+  };
 
   if (!seller) {
     return (
@@ -57,13 +108,23 @@ export function SellerProfilePage() {
     <div className="container section">
       {/* ── Seller Header ──────────────────────────────────────────────────── */}
       <div className="card seller-profile-header">
-        <div className="seller-profile-avatar">
+        {user?.username === username ? (
+          <button className="profile-avatar m0" onClick={() => setShowUploadModal(true)}>
           {seller.avatar_url ? (
-            <img src={seller.avatar_url} alt={seller.display_name} className="seller-profile-avatar__img" />
+            <img src={seller.avatar_url} alt={seller.display_name} className="profile-avatar__img" />
+          ) : (
+            <span>{initials}</span>
+          )}
+        </button>
+        ) : (
+          <div className="profile-avatar m0">
+          {seller.avatar_url ? (
+            <img src={seller.avatar_url} alt={seller.display_name} className="profile-avatar__img" />
           ) : (
             <span>{initials}</span>
           )}
         </div>
+        )}
         <div className="seller-profile-info">
           <h1 className="seller-profile-info__name">{seller.display_name}</h1>
           <div className="seller-profile-info__username text-muted">@{seller.username}</div>
@@ -95,6 +156,41 @@ export function SellerProfilePage() {
           )}
         </div>
       </div>
+
+      {/* ── Upload Avatar Modal ─────────────────────────────────────────── */}
+      {showUploadModal && (
+        <div className={`modal-overlay${modalClosing ? ' closing' : ''}`} onClick={closeUploadModal}>
+          <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{t('seller.uploadAvatarTitle')}</h2>
+              <button className="modal-close" onClick={closeUploadModal}>&times;</button>
+            </div>
+            {uploadError && <div className="auth-error flex-center">{uploadError.toUpperCase()}</div>}
+            {uploadSuccess && <div className="success flex-center">{uploadSuccess.toUpperCase()}</div>}
+            <form onSubmit={handleUploadAvatar} className="auth-form">
+              <div className="form-group">
+                <label className="form-label">{t('seller.selectAvatar')}</label>
+                <input
+                  ref={fileInputRef}
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
+                  required
+                />
+              </div>
+              <div className="modal-actions">
+                <button className="btn btn-primary" type="submit" disabled={uploadingAvatar || !avatarFile}>
+                  {uploadingAvatar ? t('seller.uploadingAvatar') : t('seller.uploadAvatar')}
+                </button>
+                <button className="btn btn-secondary" type="button" onClick={closeUploadModal}>
+                  {t('seller.cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── Products ───────────────────────────────────────────────────────── */}
       <h2 className="seller-products-title">{t('sellerProfile.productsByTitle', { name: seller.display_name })}</h2>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { productsApi } from '../api/products'
@@ -33,6 +33,13 @@ export function SellerDashboardPage() {
   const [form, setForm] = useState<CreateProductForm>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [modalClosing, setModalClosing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const stars = (rating: number | null | undefined) => '★'.repeat(Math.round(rating || 0)) + '☆'.repeat(5 - Math.round(rating || 0));
 
@@ -59,6 +66,18 @@ export function SellerDashboardPage() {
     return () => { cancelled = true; };
   }, [seller?.id]);
 
+  // useEffect to close upload modal on Escape key press
+  // working when modal is open and not when it's closing to prevent conflicts
+  // with the closing animation
+  useEffect(() => {
+    if (!showUploadModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeUploadModal();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showUploadModal]);
+
   const handleCreate = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setFormError('');
@@ -79,6 +98,38 @@ export function SellerDashboardPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleUploadAvatar = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+    if (!avatarFile) return;
+    setUploadError('');
+    setUploadSuccess('');
+    setUploadingAvatar(true);
+    try {
+      const { seller: updated } = await sellersApi.uploadAvatar(avatarFile);
+      setSeller(updated);
+      setUploadSuccess(t('seller.avatarChanged'));
+      setAvatarFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err: any) {
+      setUploadError(err?.response?.data?.message.toUpperCase() ?? t('seller.failedUploadAvatar'));
+    } finally {
+      setUploadingAvatar(false);
+      window.location.reload();
+    }
+  };
+
+  const closeUploadModal = () => {
+    setModalClosing(true);
+    setTimeout(() => {
+      setShowUploadModal(false);
+      setModalClosing(false);
+      setAvatarFile(null);
+      setUploadError('');
+      setUploadSuccess('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }, 200);
   };
 
   const handleDelete = async (id: string) => {
@@ -111,9 +162,17 @@ export function SellerDashboardPage() {
             </p>
           )}
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>
+        <div className="dashboard-header__options">
+          <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>
           {showForm ? t('seller.cancel') : t('seller.newProduct')}
-        </button>
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowUploadModal(true)}>
+            {t('seller.newUpload')}
+          </button>
+          <button className="btn btn-primary" onClick={() => window.location.href = `/sellers/${seller?.username}`}>
+            {t('seller.gotoProfile')}
+          </button>
+        </div>
       </div>
 
       {/* ── Create Form ───────────────────────────────────────────────────── */}
@@ -184,6 +243,41 @@ export function SellerDashboardPage() {
               {submitting ? t('seller.creating') : t('seller.createProduct')}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ── Upload Avatar Modal ─────────────────────────────────────────── */}
+      {showUploadModal && (
+        <div className={`modal-overlay${modalClosing ? ' closing' : ''}`} onClick={closeUploadModal}>
+          <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{t('seller.uploadAvatarTitle')}</h2>
+              <button className="modal-close" onClick={closeUploadModal}>&times;</button>
+            </div>
+            {uploadError && <div className="auth-error flex-center">{uploadError.toUpperCase()}</div>}
+            {uploadSuccess && <div className="success flex-center">{uploadSuccess.toUpperCase()}</div>}
+            <form onSubmit={handleUploadAvatar} className="auth-form">
+              <div className="form-group">
+                <label className="form-label">{t('seller.selectAvatar')}</label>
+                <input
+                  ref={fileInputRef}
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
+                  required
+                />
+              </div>
+              <div className="modal-actions">
+                <button className="btn btn-primary" type="submit" disabled={uploadingAvatar || !avatarFile}>
+                  {uploadingAvatar ? t('seller.uploadingAvatar') : t('seller.uploadAvatar')}
+                </button>
+                <button className="btn btn-secondary" type="button" onClick={closeUploadModal}>
+                  {t('seller.cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

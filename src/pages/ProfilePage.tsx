@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { userApi } from '../api/users'
@@ -10,8 +10,15 @@ export function ProfilePage() {
   const { user } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [modalClosing, setModalClosing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'security'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'update'>('info');
    const [form, setForm] = useState({
     old_password: '',
     new_password: '',
@@ -19,6 +26,18 @@ export function ProfilePage() {
   });
 
   if (!user) return null;
+
+  // useEffect to close upload modal on Escape key press
+  // working when modal is open and not when it's closing to prevent conflicts
+  // with the closing animation
+  useEffect(() => {
+    if (!showUploadModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeUploadModal();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showUploadModal]);
 
   const handleChangePassword = async (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -32,10 +51,41 @@ export function ProfilePage() {
       await userApi.updatePassword(form.old_password, form.new_password);
       setSuccess(t('profile.passwordChanged'))
     } catch (err: any) {
-      setError(err?.response?.data?.error ?? t('profile.failedChangePassword'));
+      setError(err?.response?.data?.message ?? t('profile.failedChangePassword'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeUploadModal = () => {
+    setModalClosing(true);
+    setTimeout(() => {
+      setShowUploadModal(false);
+      setModalClosing(false);
+      setAvatarFile(null);
+      setUploadError('');
+      setUploadSuccess('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }, 200);
+  };
+
+  const handleChangePhoto = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+        if (!avatarFile) return;
+        setUploadError('');
+        setUploadSuccess('');
+        setUploadingAvatar(true);
+        try {
+          await userApi.uploadAvatar(avatarFile);
+          setUploadSuccess(t('seller.avatarChanged'));
+          setAvatarFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        } catch (err: any) {
+          setUploadError(err?.response?.data?.message.toUpperCase() ?? t('seller.failedUploadAvatar'));
+        } finally {
+          setUploadingAvatar(false);
+          window.location.reload();
+        }
   };
 
   const initials = user.full_name
@@ -50,12 +100,16 @@ export function ProfilePage() {
 
   return (
     <div className="container section">
-      <h1 className="page-title">{t('profile.title')}</h1>
+      <h1 className="page-title">{t('profile.title')} · {user.username.toUpperCase()}</h1>
 
       <div className="profile-layout">
         {/* ── Left: Avatar & Quick Nav ──────────────────────────────────────── */}
         <aside className="profile-sidebar card">
-          <div className="profile-avatar">{initials}</div>
+          <button onClick={() => setShowUploadModal(true)} className="profile-avatar">{user.avatar_url ? (
+              <img src={user.avatar_url} alt={user.full_name} className="profile-avatar__img" />
+          ) : (
+              <span>{initials}</span>
+          )}</button>
           <div className="profile-sidebar__name">{user.full_name || user.username}</div>
           <div className="profile-sidebar__username text-muted">@{user.username}</div>
           <span className={`badge ${roleBadgeClass} profile-sidebar__role`}>{t(`profile.${user.role}Account`)}</span>
@@ -91,6 +145,12 @@ export function ProfilePage() {
               onClick={() => setActiveTab('security')}
             >
               {t('profile.security')}
+            </button>
+            <button
+                className={`profile-tab${activeTab === 'update' ? ' active' : ''}`}
+                onClick={() => setActiveTab('update')}
+            >
+              {t('profile.update')}
             </button>
           </div>
 
@@ -173,6 +233,69 @@ export function ProfilePage() {
               </form>
             </div>
           )}
+
+          {activeTab === 'update' && (
+              <div className="card profile-panel">
+                {error && <div className="error">{error}</div>}
+
+                {success && <div className="success">{success}</div>}
+
+                <form className="auth-form" onSubmit={handleChangePhoto}>
+                  <div className="form-group">
+                    <label className="form-label">{t('profile.changePhoto')}</label>
+                    <input
+                        id="avatar"
+                        name="avatar"
+                        accept="image/png, image/jpeg"
+                        className="input-file"
+                        type="file"
+                        required
+                        autoFocus
+                    />
+                  </div>
+
+                  <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
+                    {loading ? t('profile.changingPhoto') : t('profile.changePhoto')}
+                  </button>
+                </form>
+
+              </div>
+          )}
+
+          {/* ── Upload Avatar Modal ─────────────────────────────────────────── */}
+      {showUploadModal && (
+        <div className={`modal-overlay${modalClosing ? ' closing' : ''}`} onClick={closeUploadModal}>
+          <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{t('seller.uploadAvatarTitle')}</h2>
+              <button className="modal-close" onClick={closeUploadModal}>&times;</button>
+            </div>
+            {uploadError && <div className="auth-error flex-center">{uploadError.toUpperCase()}</div>}
+            {uploadSuccess && <div className="success flex-center">{uploadSuccess.toUpperCase()}</div>}
+            <form onSubmit={handleChangePhoto} className="auth-form">
+              <div className="form-group">
+                <label className="form-label">{t('seller.selectAvatar')}</label>
+                <input
+                  ref={fileInputRef}
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
+                  required
+                />
+              </div>
+              <div className="modal-actions">
+                <button className="btn btn-primary" type="submit" disabled={uploadingAvatar || !avatarFile}>
+                  {uploadingAvatar ? t('seller.uploadingAvatar') : t('seller.uploadAvatar')}
+                </button>
+                <button className="btn btn-secondary" type="button" onClick={closeUploadModal}>
+                  {t('seller.cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
         </div>
       </div>
     </div>

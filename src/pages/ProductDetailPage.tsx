@@ -275,9 +275,9 @@ export function ProductDetailPage() {
             <div className="card product-detail__seller">
               <h3 className="product-detail__section-title">{t('product.seller')}</h3>
               <Link to={`/sellers/${seller.username}`} className="seller-preview">
-                <div className="seller-preview__avatar">
+                <div className="profile-avatar seller-preview__avatar">
                   {seller.avatar_url && (
-                    <img src={seller.avatar_url} alt={seller.display_name} className='seller-profile-avatar__img' />
+                    <img src={seller.avatar_url} alt={seller.display_name} className='profile-avatar__img' />
                   ) || (
                     <div className="seller-preview__avatar-placeholder">
                       {seller.display_name.slice(0, 1).toUpperCase()}
