@@ -12,8 +12,8 @@ export function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
     setMenuOpen(false);
   };
@@ -34,7 +34,15 @@ export function Header() {
 
         <nav className={`header__nav${menuOpen ? ' open' : ''}`}>
           <Link to="/catalog" className="header__nav-link" onClick={close}>{t('header.catalog')}</Link>
-          <Link to="/sellers/create" className="header__nav-link" onClick={close}>{t('header.becomeSeller')}</Link>
+          {user?.role === 'admin' && (
+            <Link to="/admin/dashboard" className="header__nav-link" onClick={close}>{t('admin.dashboard')}</Link>
+          )}
+          {user?.role === 'seller' && (
+            <Link to="/seller/dashboard" className="header__nav-link" onClick={close}>{t('seller.dashboard')}</Link>
+          )}
+          {user?.role === 'buyer' && (
+            <Link to="/sellers/create" className="header__nav-link" onClick={close}>{t('header.becomeSeller')}</Link>
+          )}
 
           {/* Mobile-only: auth + lang inside burger dropdown */}
           <div className="header__nav-mobile-auth">
