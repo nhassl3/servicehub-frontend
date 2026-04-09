@@ -94,7 +94,7 @@ export function SellerDashboardPage() {
       setForm(EMPTY_FORM);
       setShowForm(false);
     } catch (err: any) {
-      setFormError(err?.response?.data?.error ?? t('seller.failedCreate'));
+      setFormError(err?.response?.data?.message.toUpperCase() ?? t('seller.failedCreate'));
     } finally {
       setSubmitting(false);
     }
