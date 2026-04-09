@@ -19,10 +19,12 @@
   position: absolute;
   inset: 0;
   width: 100%;
-  height: calc(100% + .4rem);
+  height: 100%;
   pointer-events: none;
   opacity: 0.55;
   mix-blend-mode: screen;
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
 }
 
 .hero__badge {
