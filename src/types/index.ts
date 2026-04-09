@@ -54,6 +54,7 @@ export interface Admin {
   total_moderation: number;
   created_at: string;
   updated_at: string;
+  avatar_url: string;
 }
 
 export interface CartItem {
@@ -122,6 +123,28 @@ export interface AuthTokens {
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
+}
+
+export interface ModerationEntry {
+  id: string;
+  product_id: string;
+  admin_id: string;
+  admin_username: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QueueProduct {
+  product?: Product;
+  moderation?: ModerationEntry | null;
+}
+
+export interface ModerationStats {
+  total_pending: number;
+  total_claimed: number;
+  total_approved: number;
+  total_rejected: number;
 }
 
 export type UserRole = 'buyer' | 'seller' | 'admin';
