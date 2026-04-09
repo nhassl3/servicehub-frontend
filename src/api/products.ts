@@ -4,6 +4,7 @@ import { apiClient } from './client'
 export interface ListProductsParams {
   category_id?: number;
   seller_id?: string;
+  admin_id?: string;
   min_price?: number;
   max_price?: number;
   limit?: number;
