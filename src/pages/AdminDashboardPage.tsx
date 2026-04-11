@@ -23,6 +23,7 @@ export function AdminDashboardPage() {
   const [queueProducts, setQueueProducts] = useState<QueueProduct[]>([]);
   const [queueTotal, setQueueTotal] = useState(0);
   const [queuePage, setQueuePage] = useState(0);
+  
   const [loadingQueue, setLoadingQueue] = useState(false);
 
   // My reviews state
@@ -64,6 +65,7 @@ export function AdminDashboardPage() {
   useEffect(() => {
     if (!user?.username) return;
     let cancelled = false;
+    loadStats();
     adminsApi.getProfileByUsername(user.username)
       .then(d => { if (!cancelled) setAdmin(d.admin); })
       .catch(() => {});
@@ -72,6 +74,7 @@ export function AdminDashboardPage() {
 
   // ── Load queue ──────────────────────────────────────────────────────
   const loadQueue = useCallback(async () => {
+    if (stats != null && stats.total_pending >= 5) return;
     setLoadingQueue(true);
     try {
       const data = await moderationApi.queue(PAGE_SIZE, queuePage * PAGE_SIZE);
@@ -82,7 +85,7 @@ export function AdminDashboardPage() {
     } finally {
       setLoadingQueue(false);
     }
-  }, [queuePage]);
+  }, [queuePage, stats]);
 
   // ── Load my reviews ─────────────────────────────────────────────────
   const loadMy = useCallback(async () => {
@@ -113,19 +116,23 @@ export function AdminDashboardPage() {
 
   useEffect(() => {
     if (tab === 'queue') loadQueue();
-    if (tab === 'my') loadMy();
-    if (tab === 'stats') loadStats();
+    if (tab === 'my') loadMy(); 
   }, [tab, loadQueue, loadMy, loadStats]);
 
   // ── Actions ─────────────────────────────────────────────────────────
   const handleClaim = async (productId: string) => {
     if (productId === "") return;
+    if (stats == null || stats?.total_pending >= 5) {
+      setActionError(t('admin.moreThan5'));
+      return;
+    }
     setClaimingId(productId);
     setActionError('');
     try {
       await moderationApi.claim(productId);
-      await loadQueue();
+      await loadStats();
       await loadMy();
+      await loadQueue();
       setTab('my');
     } catch (err: any) {
       setActionError(err?.response?.data?.message ?? t('admin.claimFailed'));
@@ -140,6 +147,7 @@ export function AdminDashboardPage() {
     setActionError('');
     try {
       await moderationApi.release(productId);
+      await loadStats();
       await loadMy();
       await loadQueue();
     } catch (err: any) {
@@ -155,6 +163,7 @@ export function AdminDashboardPage() {
     try {
       await moderationApi.approve(productId);
       closeReviewModal();
+      await loadStats();
       await loadMy();
       await loadQueue();
       if (admin) {
@@ -177,6 +186,7 @@ export function AdminDashboardPage() {
     try {
       await moderationApi.reject(productId, rejectReason);
       closeReviewModal();
+      await loadStats();
       await loadMy();
       await loadQueue();
       if (admin) {
@@ -190,7 +200,7 @@ export function AdminDashboardPage() {
   };
 
   // ── Upload avatar ───────────────────────────────────────────────────
-  const handleUploadAvatar = async (e: React.FormEvent) => {
+  const handleUploadAvatar = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!avatarFile) return;
     setUploadError('');
@@ -210,7 +220,7 @@ export function AdminDashboardPage() {
   };
 
   // ── Create admin ────────────────────────────────────────────────────
-  const handleCreateAdmin = async (e: React.FormEvent) => {
+  const handleCreateAdmin = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setCreateError('');
     setCreateSuccess('');
@@ -345,10 +355,6 @@ export function AdminDashboardPage() {
             <span className="admin-stat-chip__label">{t('admin.pending')}</span>
           </div>
           <div className="admin-stat-chip">
-            <span className="admin-stat-chip__value text-primary">{stats.total_claimed ?? 0}</span>
-            <span className="admin-stat-chip__label">{t('admin.inReview')}</span>
-          </div>
-          <div className="admin-stat-chip">
             <span className="admin-stat-chip__value text-success">{stats.total_approved ?? 0}</span>
             <span className="admin-stat-chip__label">{t('admin.approved')}</span>
           </div>
@@ -414,6 +420,13 @@ export function AdminDashboardPage() {
           {loadingQueue ? (
             <div className="flex-center" style={{ padding: '3rem' }}>
               <div className="spinner" />
+            </div>
+          ) : stats && stats.total_pending >= 5 ? (
+            <div className="admin-empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <p>{t('admin.moreThan5')}</p>
             </div>
           ) : queueProducts.length === 0 ? (
             <div className="admin-empty-state">
@@ -616,17 +629,6 @@ export function AdminDashboardPage() {
                 </div>
                 <div className="admin-stat-card__value">{stats.total_pending ?? 0}</div>
                 <div className="admin-stat-card__label">{t('admin.pendingProducts')}</div>
-              </div>
-
-              <div className="admin-stat-card card">
-                <div className="admin-stat-card__icon admin-stat-card__icon--review">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  </svg>
-                </div>
-                <div className="admin-stat-card__value">{stats.total_claimed ?? 0}</div>
-                <div className="admin-stat-card__label">{t('admin.inReview')}</div>
               </div>
 
               <div className="admin-stat-card card">
