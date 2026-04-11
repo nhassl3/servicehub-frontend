@@ -142,7 +142,6 @@ export interface QueueProduct {
 
 export interface ModerationStats {
   total_pending: number;
-  total_claimed: number;
   total_approved: number;
   total_rejected: number;
 }
