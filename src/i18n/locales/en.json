@@ -159,7 +159,8 @@
     "levelSuper": "Super Admin",
     "creating": "Creating\u2026",
     "adminCreated": "Admin {{name}} created successfully!",
-    "createFailed": "Failed to create admin."
+    "createFailed": "Failed to create admin.",
+    "moreThan5": "You can claim only 5 products to review"
   },
   "profile": {
     "buyerAccount": "Buyer",
