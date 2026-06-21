@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { ScrollToTop } from './hooks/useScrollToTop'
 
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { BalancePage } from './pages/BalancePage'
 import { CartPage } from './pages/CartPage'
 import { CatalogPage } from './pages/CatalogPage'
@@ -58,6 +59,7 @@ function AppRoutes() {
         <Route path="balance" element={<RequireAuth><BalancePage /></RequireAuth>} />
         <Route path="sellers/create" element={<RequireAuth><CreateSellerPage /></RequireAuth>} />
         <Route path="seller/dashboard" element={<RequireAuth><SellerDashboardPage /></RequireAuth>} />
+        <Route path="admin/dashboard" element={<RequireAuth><AdminDashboardPage /></RequireAuth>} /> 
 
         {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />

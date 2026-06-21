@@ -18,6 +18,7 @@ export function ProductDetailPage() {
   const { isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [productInPending, setProductInPending] = useState(false);
   const [seller, setSeller] = useState<Seller | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewTotal, setReviewTotal] = useState(0);
@@ -40,6 +41,12 @@ export function ProductDetailPage() {
 
     productsApi.get(id).then(({ product }) => {
       if (cancelled) return;
+      if (product.status === 'draft' || product.status === 'inactive') {
+        setProductInPending(true);
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
       setProduct(product);
       setRating(product.rating);
       sellersApi.getProfileByUUID(product.seller_id).catch(() => null).then(d => {
@@ -123,6 +130,15 @@ export function ProductDetailPage() {
     return (
       <div className="flex-center" style={{ minHeight: '60vh' }}>
         <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (!product && productInPending) {
+    return (
+      <div className="container section">
+        <div className="card"> <p className="text-muted flex-center">{t('product.notAvailable')}</p>
+        <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>{t('product.backToCatalog')}</Link></div>
       </div>
     );
   }
