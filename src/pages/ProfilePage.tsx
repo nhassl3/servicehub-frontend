@@ -77,11 +77,11 @@ export function ProfilePage() {
         setUploadingAvatar(true);
         try {
           await userApi.uploadAvatar(avatarFile);
-          setUploadSuccess(t('seller.avatarChanged'));
+          setUploadSuccess(t('seller.avatarChanged'));  
           setAvatarFile(null);
-          if (fileInputRef.current) fileInputRef.current.value = '';
+          if (fileInputRef.current) fileInputRef.current.value = '';  
         } catch (err: any) {
-          setUploadError(err?.response?.data?.message.toUpperCase() ?? t('seller.failedUploadAvatar'));
+          setUploadError(err?.response?.data?.message ?? t('seller.failedUploadAvatar'));
         } finally {
           setUploadingAvatar(false);
           window.location.reload();
@@ -106,7 +106,7 @@ export function ProfilePage() {
         {/* ── Left: Avatar & Quick Nav ──────────────────────────────────────── */}
         <aside className="profile-sidebar card">
           <button onClick={() => setShowUploadModal(true)} className="profile-avatar">{user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.full_name} className="profile-avatar__img" />
+              <img src={user.avatar_url.startsWith("http") ? user.avatar_url : import.meta.env.VITE_MINIO_PUBLIC_URL + user.avatar_url} alt={user.full_name} className="profile-avatar__img" />
           ) : (
               <span>{initials}</span>
           )}</button>

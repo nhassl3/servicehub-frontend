@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ordersApi } from '../api/orders'
+import { ConvertedPrice } from '../components/converter/ConvertedPrice'
+import useCurrencyConverter from '../hooks/useCurrencyConvreter'
 import type { Order } from '../types'
 import './OrdersPage.css'
 
@@ -14,10 +16,14 @@ const STATUS_CLASS: Record<string, string> = {
 
 export function OrdersPage() {
   const { t } = useTranslation();
+  const { exchangeRates } = useCurrencyConverter();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  
+  const currecy = t('common.currency');
 
   const PAGE_SIZE = 10;
 
@@ -68,7 +74,7 @@ export function OrdersPage() {
 
                 <div className="order-card__footer">
                   <span className="text-muted">{t('orders.item', { count: order.items?.length || 0 })}</span>
-                  <span className="order-card__total">${order.total_amount.toFixed(2)}</span>
+                  <span className="order-card__total"><ConvertedPrice price={order.total_amount} currency={currecy} exchangeRates={exchangeRates} /></span>
                 </div>
               </Link>
             ))}

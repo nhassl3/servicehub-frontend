@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useParams, Link } from 'react-router-dom';
-import { ordersApi } from '../api/orders';
-import type { Order } from '../types';
-import './OrdersPage.css';
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link, useParams } from 'react-router-dom'
+import { ordersApi } from '../api/orders'
+import { ConvertedPrice } from '../components/converter/ConvertedPrice'
+import useCurrencyConverter from '../hooks/useCurrencyConvreter'
+import type { Order } from '../types'
+import './OrdersPage.css'
 
 const STATUS_CLASS: Record<string, string> = {
   pending:   'badge-warning',
@@ -14,10 +16,13 @@ const STATUS_CLASS: Record<string, string> = {
 
 export function OrderDetailPage() {
   const { t } = useTranslation();
+  const { exchangeRates } = useCurrencyConverter();
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+
+  const currency = t('common.currency');
 
   useEffect(() => {
     if (!id) return;
@@ -87,10 +92,10 @@ export function OrderDetailPage() {
                     Product #{item.product_id.slice(0, 8)}…
                   </Link>
                   <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                    {item.quantity} × ${item.unit_price.toFixed(2)}
+                    {item.quantity} × <ConvertedPrice price={item.unit_price} currency={currency} exchangeRates={exchangeRates} />
                   </div>
                 </div>
-                <span style={{ fontWeight: 600 }}>${item.total_price.toFixed(2)}</span>
+                <span style={{ fontWeight: 600 }}><ConvertedPrice price={item.total_price} currency={currency} exchangeRates={exchangeRates} /></span>
               </div>
             ))}
           </div>
@@ -106,7 +111,7 @@ export function OrderDetailPage() {
           <div className="cart-summary__divider" />
           <div className="cart-summary__row cart-summary__total">
             <span>{t('orderDetail.total')}</span>
-            <span className="text-primary">${order.total_amount.toFixed(2)}</span>
+            <span className="text-primary"><ConvertedPrice price={order.total_amount} currency={currency} exchangeRates={exchangeRates} /></span>
           </div>
 
           {order.status === 'pending' && (

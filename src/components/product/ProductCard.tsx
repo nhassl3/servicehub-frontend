@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import useCurrencyConverter from '../../hooks/useCurrencyConvreter'
 import type { Product } from '../../types'
+import { ConvertedPrice } from '../converter/ConvertedPrice'
 import './ProductCard.css'
 
 interface Props {
@@ -11,8 +13,11 @@ interface Props {
 
 export function ProductCard({ product, slug }: Props & { slug?: string }) {
   const { t } = useTranslation();
+  const { exchangeRates } = useCurrencyConverter();
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
+
+  const currency = t('common.currency');
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,7 +51,7 @@ export function ProductCard({ product, slug }: Props & { slug?: string }) {
       </div>
 
       <div className="product-card__footer">
-        <span className="product-card__price">${product.price.toFixed(2)}</span>
+        <span className="product-card__price"><ConvertedPrice price={product?.price || 0} currency={currency} exchangeRates={exchangeRates} /></span>
         {isAuthenticated && (
           <button onClick={handleAddToCart} className="btn btn-primary btn-sm">
             {t('product.addToCart')}

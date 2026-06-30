@@ -4,10 +4,12 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { ScrollToTop } from './hooks/useScrollToTop'
 
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { BalancePage } from './pages/BalancePage'
 import { CartPage } from './pages/CartPage'
 import { CatalogPage } from './pages/CatalogPage'
 import { CreateSellerPage } from './pages/CreateSellerPage'
+import { EmailVerificationPage } from './pages/EmailVerificationPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
@@ -15,15 +17,27 @@ import { OrdersPage } from './pages/OrdersPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
+import { RequestResetPasswordPage } from './pages/RequestResetPassword'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SellerDashboardPage } from './pages/SellerDashboardPage'
 import { SellerProfilePage } from './pages/SellerProfilePage'
 import { WishlistPage } from './pages/WishlistPage'
 
-// Guard: redirect to /login if not authenticated
+// Guard: redirect to /login if not authenticated, or to /verify-email if email not verified
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isEmailVerified } = useAuth();
   if (isLoading) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isEmailVerified) return <Navigate to="/verify-email" replace />;
+  return <>{children}</>;
+}
+
+// Guard: only allow access to /verify-email when authenticated but email not verified
+function RequireVerifiedEmail({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, isEmailVerified } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (isEmailVerified) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -48,6 +62,11 @@ function AppRoutes() {
         {/* Guest-only */}
         <Route path="login" element={<RequireGuest><LoginPage /></RequireGuest>} />
         <Route path="register" element={<RequireGuest><RegisterPage /></RequireGuest>} />
+         <Route path="request-reset-password" element={<RequireGuest><RequestResetPasswordPage /></RequireGuest>} />
+        <Route path="reset-password" element={<RequireGuest><ResetPasswordPage /></RequireGuest>} />
+
+        {/* Email verification */}
+        <Route path="verify-email" element={<RequireVerifiedEmail><EmailVerificationPage /></RequireVerifiedEmail>} />
 
         {/* Protected */}
         <Route path="cart" element={<RequireAuth><CartPage /></RequireAuth>} />
@@ -58,6 +77,7 @@ function AppRoutes() {
         <Route path="balance" element={<RequireAuth><BalancePage /></RequireAuth>} />
         <Route path="sellers/create" element={<RequireAuth><CreateSellerPage /></RequireAuth>} />
         <Route path="seller/dashboard" element={<RequireAuth><SellerDashboardPage /></RequireAuth>} />
+        <Route path="admin/dashboard" element={<RequireAuth><AdminDashboardPage /></RequireAuth>} /> 
 
         {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />

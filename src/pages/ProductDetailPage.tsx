@@ -6,18 +6,22 @@ import { productsApi } from '../api/products'
 import { reviewsApi } from '../api/reviews'
 import { sellersApi } from '../api/sellers'
 import { wishlistApi } from '../api/wishlist'
+import { ConvertedPrice } from '../components/converter/ConvertedPrice'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import useCurrencyConverter from '../hooks/useCurrencyConvreter'
 import type { Product, Review, Seller } from '../types'
 import './ProductDetailPage.css'
 
 export function ProductDetailPage() {
   const { t } = useTranslation();
+  const { exchangeRates } = useCurrencyConverter();
   const { id } = useParams<{ id: string }>();
   const { productInCart, addItem } = useCart();
   const { isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [productInPending, setProductInPending] = useState(false);
   const [seller, setSeller] = useState<Seller | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewTotal, setReviewTotal] = useState(0);
@@ -26,6 +30,8 @@ export function ProductDetailPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [inCart, setInCart] = useState(false);
+
+  const currency = t('common.currency');
 
   // Review form
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
@@ -40,6 +46,12 @@ export function ProductDetailPage() {
 
     productsApi.get(id).then(({ product }) => {
       if (cancelled) return;
+      if (product.status === 'draft' || product.status === 'inactive') {
+        setProductInPending(true);
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
       setProduct(product);
       setRating(product.rating);
       sellersApi.getProfileByUUID(product.seller_id).catch(() => null).then(d => {
@@ -127,6 +139,15 @@ export function ProductDetailPage() {
     );
   }
 
+  if (!product && productInPending) {
+    return (
+      <div className="container section">
+        <div className="card"> <p className="text-muted flex-center">{t('product.notAvailable')}</p>
+        <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>{t('product.backToCatalog')}</Link></div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="container section">
@@ -168,6 +189,8 @@ export function ProductDetailPage() {
                 <p key={i}>{line}</p>
               ))}
             </div>
+              
+            <a href="#offer" className="goto-to-offer">{t('product.gotoOffer')}</a>
           </div>
 
           {/* ── Reviews ───────────────────────────────────────────────────── */}
@@ -225,9 +248,9 @@ export function ProductDetailPage() {
         </div>
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-        <div className="product-detail__sidebar">
+        <div id="offer" className="product-detail__sidebar">
           <div className="card product-detail__buy">
-            <div className="product-detail__price">${product.price.toFixed(2)}</div>
+            <div className="product-detail__price"><ConvertedPrice price={product?.price || 0} currency={currency} exchangeRates={exchangeRates} /></div>
 
             {isAuthenticated ? (
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -277,7 +300,7 @@ export function ProductDetailPage() {
               <Link to={`/sellers/${seller.username}`} className="seller-preview">
                 <div className="profile-avatar seller-preview__avatar">
                   {seller.avatar_url && (
-                    <img src={seller.avatar_url} alt={seller.display_name} className='profile-avatar__img' />
+                    <img src={seller.avatar_url.startsWith("http") ? seller.avatar_url : import.meta.env.VITE_MINIO_PUBLIC_URL + seller.avatar_url} alt={seller.display_name} className='profile-avatar__img' />
                   ) || (
                     <div className="seller-preview__avatar-placeholder">
                       {seller.display_name.slice(0, 1).toUpperCase()}

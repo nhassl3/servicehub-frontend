@@ -2,13 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { ordersApi } from '../api/orders'
+import { ConvertedPrice } from '../components/converter/ConvertedPrice'
 import { useCart } from '../context/CartContext'
+import useCurrencyConverter from '../hooks/useCurrencyConvreter'
 import './CartPage.css'
 
 const DEBOUNCE_MS = 400;
 
 export function CartPage() {
   const { t } = useTranslation();
+  const { exchangeRates } = useCurrencyConverter();
   const { cart, itemCount, removeItem, updateQty, isLoading } = useCart();
   const navigate = useNavigate();
   const [checkingOut, setCheckingOut] = useState(false);
@@ -17,6 +20,7 @@ export function CartPage() {
   // Per-product optimistic quantities & debounce timers
   const [pendingQty, setPendingQty] = useState<Map<string, number>>(new Map());
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const currency = t('common.currency');
 
   // Cleanup all timers on unmount
   useEffect(() => {
@@ -113,7 +117,7 @@ export function CartPage() {
                   Product #{item.product_id.slice(0, 8)}…
                 </Link>
                 <span className="cart-item__price text-muted">
-                  ${item.unit_price.toFixed(2)} {t('cart.each')}
+                  <ConvertedPrice price={item.unit_price} currency={currency} exchangeRates={exchangeRates} /> {t('cart.each')}
                 </span>
               </div>
 
@@ -138,7 +142,7 @@ export function CartPage() {
                 })()}
 
                 <span className="cart-item__total">
-                  ${((pendingQty.get(item.product_id) ?? item.quantity) * item.unit_price).toFixed(2)}
+                  <ConvertedPrice price={((pendingQty.get(item.product_id) ?? item.quantity) * item.unit_price)} currency={currency} exchangeRates={exchangeRates} />
                 </span>
 
                 <button
@@ -164,12 +168,12 @@ export function CartPage() {
               <>
                 <div className="cart-summary__row">
                   <span className="text-muted">{t('cart.items', { count: cart.items.length })}</span>
-                  <span>${optimisticSubtotal.toFixed(2)}</span>
+                  <span><ConvertedPrice price={optimisticSubtotal} currency={currency} exchangeRates={exchangeRates} /></span>
                 </div>
                 <div className="cart-summary__divider" />
                 <div className="cart-summary__row cart-summary__total">
                   <span>{t('cart.total')}</span>
-                  <span className="text-primary">${optimisticSubtotal.toFixed(2)}</span>
+                  <span className="text-primary"><ConvertedPrice price={optimisticSubtotal} currency={currency} exchangeRates={exchangeRates} /></span>
                 </div>
               </>
             );

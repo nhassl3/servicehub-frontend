@@ -20,6 +20,7 @@ export function LoginPage() {
   const [touched, setTouched] = useState<Partial<Record<FormKey, boolean>>>({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [visibleChangePasswordButton, setVisibleChangePasswordButton] = useState(false);
 
   const validate = (field: FormKey, value: string): string => {
     if (!value) return t('validation.required');
@@ -53,11 +54,17 @@ export function LoginPage() {
       await login(form.username, form.password);
       navigate('/');
     } catch (err: any) {
-      console.log(err);
+      if (err?.response?.data?.message == "invalid credentials") {
+        setVisibleChangePasswordButton(true);
+      }
       setServerError(err?.response?.data?.message.toLocaleUpperCase() ?? t('login.invalidCredentials'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleYandexLogin = () => {
+    window.location.href = '/api/v1/auth/yandex';
   };
 
   return (
@@ -102,6 +109,24 @@ export function LoginPage() {
             {loading ? t('login.signingIn') : t('login.signIn')}
           </button>
         </form>
+
+        <div className="auth-separator">или</div>
+
+        <button
+          type="button"
+          className="btn auth-yandex-button auth-submit"
+          onClick={handleYandexLogin}
+        >
+          <span className="auth-yandex-icon">Я</span>
+          {t('login.signInWithYandex') || 'Войти через Yandex ID'}
+        </button>
+
+        {visibleChangePasswordButton && (
+          <p className="auth-footer text-muted">
+            {t('login.forgotPassword')}{' '}
+            <Link to="/reset-password" className="text-primary">{t('login.resetPassword')}</Link>
+          </p>
+        )}
 
         <p className="auth-footer text-muted">
           {t('login.noAccount')}{' '}

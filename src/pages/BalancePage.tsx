@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { balanceApi } from '../api/balance'
+import { ConvertedPrice } from '../components/converter/ConvertedPrice'
+import useCurrencyConverter from '../hooks/useCurrencyConvreter'
 import type { BalanceTransaction } from '../types'
 import './BalancePage.css'
 
 export function BalancePage() {
   const { t } = useTranslation();
+  const { exchangeRates } = useCurrencyConverter();
   const [balance, setBalance] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
   const [total, setTotal] = useState(0);
@@ -14,6 +17,8 @@ export function BalancePage() {
   const [depositing, setDepositing] = useState(false);
   const [depositError, setDepositError] = useState('');
   const [page, setPage] = useState(0);
+
+  const targetCurrency = t('common.currency');
 
   const PAGE_SIZE = 10;
 
@@ -32,7 +37,7 @@ export function BalancePage() {
     loadAll().finally(() => setLoading(false));
   }, [page]);
 
-  const handleDeposit = async (e: React.FormEvent) => {
+  const handleDeposit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setDepositError('');
     const amount = parseFloat(depositAmount);
@@ -73,7 +78,7 @@ export function BalancePage() {
           <div className="card balance-card">
             <div className="balance-card__label text-muted">{t('balancePage.available')}</div>
             <div className="balance-card__amount text-primary">
-              ${(balance ?? 0).toFixed(2)}
+              <ConvertedPrice price={balance ?? 0} currency={targetCurrency} exchangeRates={exchangeRates} />
             </div>
           </div>
 
@@ -118,7 +123,7 @@ export function BalancePage() {
                   </div>
                   <div className="balance-tx__right">
                     <span className={tx.type === 'deposit' ? 'text-success' : ['commission', 'profit'].includes(tx.type) ? 'text-warning' : 'text-error'}>
-                      {['deposit', 'commission', 'profit'].includes(tx.type) ? '+' : '−'}${tx.amount.toFixed(2)}
+                      {['deposit', 'commission', 'profit'].includes(tx.type) ? '+' : '−'}<ConvertedPrice price={tx.amount} currency={targetCurrency} exchangeRates={exchangeRates} />
                     </span>
                     <span className="text-muted balance-tx__date">
                       {new Date(tx.created_at).toLocaleDateString(undefined, {

@@ -111,7 +111,7 @@ export function SellerProfilePage() {
         {user?.username === username ? (
           <button className="profile-avatar m0" onClick={() => setShowUploadModal(true)}>
           {seller.avatar_url ? (
-            <img src={seller.avatar_url} alt={seller.display_name} className="profile-avatar__img" />
+            <img src={seller.avatar_url.startsWith("http") ? seller.avatar_url : import.meta.env.VITE_MINIO_PUBLIC_URL + seller.avatar_url} alt={seller.display_name} className="profile-avatar__img" />
           ) : (
             <span>{initials}</span>
           )}
@@ -119,7 +119,7 @@ export function SellerProfilePage() {
         ) : (
           <div className="profile-avatar m0">
           {seller.avatar_url ? (
-            <img src={seller.avatar_url} alt={seller.display_name} className="profile-avatar__img" />
+            <img src={seller.avatar_url.startsWith("http") ? seller.avatar_url : import.meta.env.VITE_MINIO_PUBLIC_URL + seller.avatar_url} alt={seller.display_name} className="profile-avatar__img" />
           ) : (
             <span>{initials}</span>
           )}

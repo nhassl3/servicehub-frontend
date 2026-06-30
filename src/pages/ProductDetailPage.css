@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 .product-detail__back {
   display: inline-block;
   margin-bottom: 1.5rem;
@@ -208,6 +212,14 @@
   font-size: 0.78rem;
 }
 
+.goto-to-offer {
+  display: none;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
 @media (max-width: 900px) {
   .product-detail__layout {
     grid-template-columns: 1fr;
@@ -215,5 +227,17 @@
 
   .product-detail__sidebar {
     position: static;
+  }
+
+  .product-detail__seller {
+    margin-bottom: 1.5rem;
+  }
+
+  .goto-to-offer {
+    display: block;
+  }
+  
+  #offer {
+    scroll-margin-top: 4.5rem;
   }
 }
