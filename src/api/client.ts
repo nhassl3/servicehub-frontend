@@ -1,7 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import { tokenStorage } from '../store/tokenStorage'
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:8080';
+const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:8082';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
