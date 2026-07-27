@@ -114,7 +114,7 @@ export function OrderDetailPage() {
             <span className="text-primary"><ConvertedPrice price={order.total_amount} currency={currency} exchangeRates={exchangeRates} /></span>
           </div>
 
-          {order.status === 'pending' && (
+          {order.status === 'pending' || order.status === 'paid' && (
             <button
               className="btn btn-danger"
               style={{ width: '100%', marginTop: '1.25rem' }}
