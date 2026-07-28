@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# claude
+.claude
+
+# Dependencies
+node_modules
+
+# Build artifacts
+dist
+coverage
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary files
+*.tmp
+*.swp
+.DS_Store
+
+# Documentation
+README.md
+LICENSE
+AGENTS.md
+
+# SSH-ключи (ОБЯЗАТЕЛЬНО!)
+servicehub_frontend_sshkey_2
+servicehub_frontend_sshkey_2.pub
