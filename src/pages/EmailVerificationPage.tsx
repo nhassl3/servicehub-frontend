@@ -7,6 +7,8 @@ import './EmailVerificationPage.css'
 
 const VERIFY_EMAIL_KEY = 2;
 
+const SENT_KEY = 'sh_verify_email_sent';
+
 export function EmailVerificationPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -18,7 +20,6 @@ export function EmailVerificationPage() {
   const [cooldown, setCooldown] = useState(0);
   const [operationId, setOperationId] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const initialRequested = useRef(false);
 
   useEffect(() => {
     if (success || error) {
@@ -38,8 +39,9 @@ export function EmailVerificationPage() {
   }, [cooldown > 0]);
 
   useEffect(() => {
-    if (!user?.email || initialRequested.current) return;
-    initialRequested.current = true;
+    if (!user?.email) return;
+    if (sessionStorage.getItem(SENT_KEY)) return;
+    sessionStorage.setItem(SENT_KEY, '1');
     authApi.requestVerifyEmail(user.email).then((res) => {
       setOperationId(res.operation_id);
       setCooldown(60);
