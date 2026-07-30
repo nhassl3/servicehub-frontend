@@ -12,8 +12,8 @@ export const wishlistApi = {
     return res.data;
   },
 
-  add: async (product_id: string): Promise<{ item: WishlistItem }> => {
-    const res = await apiClient.post('/api/v1/wishlist/items', { product_id });
+  toggle: async (product_id: string): Promise<{ item: WishlistItem }> => {
+    const res = await apiClient.post('/api/v1/wishlist/toggle', { product_id });
     return res.data;
   },
 
