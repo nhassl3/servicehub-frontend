@@ -77,6 +77,17 @@ html, body {
   font-size: 0.8rem;
 }
 
+.disabled {
+  opacity: 0.5;
+  background: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.disabled:hover {
+  background: var(--color-muted) !important;
+}
+
+
 .input {
   width: 100%;
   padding: 0.625rem 0.875rem;

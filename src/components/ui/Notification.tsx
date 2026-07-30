@@ -47,7 +47,7 @@ export function Notification({ message, type = 'error', visible, onClose, durati
   if (!mounted) return null;
 
   return (
-    <div className="notification-overlay">
+    <div className='notification-overlay'>
       <div className={`notification notification--${type} ${show ? 'notification--visible' : ''}`}>
         {message}
       </div>

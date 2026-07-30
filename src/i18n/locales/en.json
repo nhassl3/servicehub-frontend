@@ -81,6 +81,7 @@
     "items": "Items ({{count}})",
     "total": "Total",
     "checkout": "Checkout",
+    "insufficient": "Insufficient funds",
     "processing": "Processing\u2026",
     "checkoutFailed": "Checkout failed. Please try again."
   },
@@ -350,5 +351,9 @@
     "footer": "Please check your inbox for the verification link.",
     "resend": "Resend email",
     "resendIn": "Resend in"
+  },
+  "errors": {
+    "emailNotFound": "Email address not found!",
+    "productNotFound": "This product not in our Postgres warehouse 😢"
   }
 }
