@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { GoHeartFill } from "react-icons/go"
 import { Link, useParams } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { reviewsApi } from '../api/reviews'
 import { sellersApi } from '../api/sellers'
 import { wishlistApi } from '../api/wishlist'
 import { ConvertedPrice } from '../components/converter/ConvertedPrice'
+import { Notification } from '../components/ui/Notification'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import useCurrencyConverter from '../hooks/useCurrencyConvreter'
@@ -30,6 +31,9 @@ export function ProductDetailPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [inCart, setInCart] = useState(false);
+  const [error, setError] = useState('');
+  const wishlistDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const wishlistDesiredRef = useRef(false);
 
   const currency = t('common.currency');
 
@@ -79,6 +83,11 @@ export function ProductDetailPage() {
     return () => { cancelled = true; };
   }, [id, isAuthenticated]);
 
+  // Cleanup wishlist debounce on unmount
+  useEffect(() => {
+    return () => clearTimeout(wishlistDebounceRef.current);
+  }, []);
+
   // Effect 3: cart status
   useEffect(() => {
     if (!id) return;
@@ -103,14 +112,28 @@ export function ProductDetailPage() {
     }
   };
 
-  const handleAddToWishlist = async () => {
+  const handleAddToWishlist = () => {
     if (!product) return;
-    try {
-      await wishlistApi.add(product.id);
-      setInWishlist(true);
-    } catch (err: any) {
-      alert(err?.response?.data?.error ?? 'Failed to add to wishlist');
-    }
+    const next = !inWishlist;
+    wishlistDesiredRef.current = next;
+    setInWishlist(next);
+
+    clearTimeout(wishlistDebounceRef.current);
+    wishlistDebounceRef.current = setTimeout(async () => {
+      try {
+        const { in_wishlist } = await wishlistApi.exists(product.id);
+        if (wishlistDesiredRef.current && !in_wishlist) {
+          const { item } = await wishlistApi.toggle(product.id);
+          setInWishlist(item.added);
+        } else if (!wishlistDesiredRef.current && in_wishlist) {
+          await wishlistApi.remove(product.id);
+          setInWishlist(false);
+        }
+      } catch (err: any) {
+        setInWishlist(!wishlistDesiredRef.current);
+        setError(err?.response?.data?.message ?? 'Failed to toggle wishlist');
+      }
+    }, 500);
   };
 
   const handleReviewSubmit = async (e: React.SubmitEvent) => {
@@ -162,6 +185,7 @@ export function ProductDetailPage() {
 
   return (
     <div className="container section">
+      <Notification message={error} visible={!!error} onClose={() => setError('')} />
       <Link to="/catalog" className="product-detail__back text-muted">{t('product.backToCatalog')}</Link>
 
       <div className="product-detail__layout">
