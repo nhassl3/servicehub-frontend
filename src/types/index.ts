@@ -114,6 +114,7 @@ export interface WishlistItem {
   id: number;
   product_id: string;
   created_at: string;
+  added: boolean;
 }
 
 export interface BalanceTransaction {
