@@ -164,19 +164,13 @@ export function ProductDetailPage() {
 
   if (!product && productInPending) {
     return (
-      <div className="container section">
-        <div className="card"> <p className="text-muted flex-center">{t('product.notAvailable')}</p>
-        <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>{t('product.backToCatalog')}</Link></div>
-      </div>
+       <Notification message={`${t('product.notAvailable')} ${t('product.backToCatalog')}`} visible={true} onClose={() => window.location.href = '/catalog'} type='info' duration={1899} />
     );
   }
 
   if (!product) {
     return (
-      <div className="container section">
-        <div className="card"> <p className="text-muted">{t('product.notFound')}</p>
-        <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>{t('product.backToCatalog')}</Link></div>
-      </div>
+       <Notification message={`${t('product.notAvailable')} ${t('product.backToCatalog')}`} type='info' visible={true} onClose={() => window.location.href = '/catalog'} duration={1899} />
     );
   }
 

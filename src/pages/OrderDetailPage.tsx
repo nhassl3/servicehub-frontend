@@ -85,7 +85,7 @@ export function OrderDetailPage() {
 
           <div className="card">
             <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('orderDetail.items')}</h2>
-            {order.items.map(item => (
+            {(order.items ?? []).map(item => (
               <div key={item.id} className="profile-field">
                 <div>
                   <Link to={`/products/${item.product_id}`} className="text-primary" style={{ textDecoration: 'none', fontSize: '0.9rem' }}>
@@ -106,7 +106,7 @@ export function OrderDetailPage() {
           <h2 className="cart-summary__title">{t('orderDetail.summary')}</h2>
           <div className="cart-summary__row">
             <span className="text-muted">{t('orderDetail.items')}</span>
-            <span>{order.items.length}</span>
+            <span>{(order.items ?? []).length}</span>
           </div>
           <div className="cart-summary__divider" />
           <div className="cart-summary__row cart-summary__total">
