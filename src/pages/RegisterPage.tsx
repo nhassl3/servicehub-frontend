@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import { Notification } from '../components/ui/Notification'
 import { useAuth } from '../context/AuthContext'
 import './AuthPage.css'
 
@@ -100,13 +101,12 @@ export function RegisterPage() {
 
   return (
     <div className="auth-page">
+      <Notification message={serverError} visible={!!serverError} onClose={() => setServerError('')} />
       <div className="auth-card card">
         <div className="auth-header">
           <h1 className="auth-title">{t('register.title')}</h1>
           <p className="text-muted">{t('register.subtitle')}</p>
         </div>
-
-        {serverError && <div className="auth-error flex-center">{serverError}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-row">

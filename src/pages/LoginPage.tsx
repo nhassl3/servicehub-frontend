@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import { Notification } from '../components/ui/Notification'
 import { useAuth } from '../context/AuthContext'
 import './AuthPage.css'
 
@@ -56,7 +57,9 @@ export function LoginPage() {
     } catch (err: any) {
       if (err?.response?.data?.message == "invalid credentials") {
         setVisibleChangePasswordButton(true);
-      }
+        setServerError(t('login.invalidCredentials'));
+        return;
+      } 
       setServerError(err?.response?.data?.message.toLocaleUpperCase() ?? t('login.invalidCredentials'));
     } finally {
       setLoading(false);
@@ -69,13 +72,12 @@ export function LoginPage() {
 
   return (
     <div className="auth-page">
+      <Notification message={serverError} visible={!!serverError} onClose={() => setServerError('')} />
       <div className="auth-card card">
         <div className="auth-header">
           <h1 className="auth-title">{t('login.title')}</h1>
           <p className="text-muted">{t('login.subtitle')}</p>
         </div>
-
-        {serverError && <div className="auth-error flex-center">{serverError}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">
@@ -124,7 +126,7 @@ export function LoginPage() {
         {visibleChangePasswordButton && (
           <p className="auth-footer text-muted">
             {t('login.forgotPassword')}{' '}
-            <Link to="/reset-password" className="text-primary">{t('login.resetPassword')}</Link>
+            <Link to="/request-reset-password" className="text-primary">{t('login.resetPassword')}</Link>
           </p>
         )}
 

@@ -103,7 +103,10 @@ export function RequestResetPasswordPage() {
       setStep('code');
     } catch (err: unknown) {
       const error = err as AxiosError<{ message?: string }>;
-      console.log(error);
+      if (error?.response?.data?.message?.toLowerCase() == "not found") {
+        setServerError(t('errors.emailNotFound'));
+        return;
+      }
       setServerError(error?.response?.data?.message?.toUpperCase() ?? t('requestResetPassword.failed') ?? 'Failed to send reset code');
     } finally {
       setLoading(false);
