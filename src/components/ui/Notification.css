@@ -1,0 +1,50 @@
+.notification-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 4.1rem;
+  pointer-events: none;
+}
+
+.notification {
+  pointer-events: auto;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  max-width: 480px;
+  text-align: center;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  opacity: 0;
+  transform: translateY(-16px) scale(0.96);
+}
+
+.notification--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.notification--error {
+  background: color-mix(in srgb, var(--color-error) 15%, transparent);
+  color: var(--color-error);
+  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+.notification--success {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+}
+
+.notification--info {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
