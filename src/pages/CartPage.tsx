@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { ordersApi } from '../api/orders'
 import { ConvertedPrice } from '../components/converter/ConvertedPrice'
+import { Notification } from '../components/ui/Notification'
 import { useCart } from '../context/CartContext'
 import useCurrencyConverter from '../hooks/useCurrencyConvreter'
 import './CartPage.css'
@@ -75,6 +76,10 @@ export function CartPage() {
       const { order } = await ordersApi.create();
       navigate(`/orders/${order.id}`);
     } catch (err: any) {
+      if (err?.response?.data?.message?.toLocaleLowerCase().includes('insufficient funds')) {
+        setError(t('cart.insufficient'))
+        return
+      }
       setError(err?.response?.data?.message?.toLocaleUpperCase() ?? t('cart.checkoutFailed'));
     } finally {
       setCheckingOut(false);
@@ -105,6 +110,8 @@ export function CartPage() {
 
   return (
     <div className="container section">
+      <Notification message={error} visible={!!error} onClose={() => setError('')} />
+        
       <h1 className="page-title">{t('cart.title')}</h1>
 
       <div className="cart-layout">
@@ -178,8 +185,6 @@ export function CartPage() {
               </>
             );
           })()}
-
-          {error && <div className="auth-error flex-center" style={{ marginTop: '1rem' }}>{error}</div>}
 
           <button
             className="btn btn-primary cart-summary__checkout"

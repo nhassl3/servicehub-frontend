@@ -89,6 +89,7 @@ export function BalancePage() {
               <div className="balance-deposit__input-wrap">
                 <span className="balance-deposit__currency text-muted">$</span>
                 <input
+                  disabled={true}
                   className="input balance-deposit__input"
                   type="number"
                   placeholder="0.00"
@@ -98,7 +99,7 @@ export function BalancePage() {
                   step="0.01"
                 />
               </div>
-              <button className="btn btn-primary" type="submit" disabled={depositing}>
+              <button className="btn btn-primary disabled" type="submit" disabled={true}>
                 {depositing ? t('balancePage.depositing') : t('balancePage.deposit')}
               </button>
             </form>
