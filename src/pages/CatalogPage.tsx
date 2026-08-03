@@ -20,7 +20,7 @@ export function CatalogPage() {
   const [loading, setLoading] = useState(true);
 
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
-  const [categorySlug, setCategorySlug] = useState(searchParams.get('category') ?? '');
+  const categorySlug = searchParams.get('category') ?? '';
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(0);
@@ -66,7 +66,6 @@ export function CatalogPage() {
   }, [load, categorySlug, categoryId]);
 
   const handleCategoryChange = (slug: string) => {
-    setCategorySlug(slug);
     setPage(0);
     setQuery('');
     const params: Record<string, string> = {};
