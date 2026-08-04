@@ -419,7 +419,7 @@ export function AdminDashboardPage() {
         <div className="admin-panel">
           <div className="admin-panel__header">
             <h2>{t('admin.moderationQueue')}</h2>
-            <button className="btn btn-secondary btn-sm" onClick={loadQueue} disabled={loadingQueue}>
+            <button className={stats && stats.total_pending >= 5 ? "btn btn-secondary btn-sm disabled" : "btn btn-secondary btn-sm"} onClick={loadQueue} disabled={loadingQueue}>
               {t('admin.refresh')}
             </button>
           </div>
@@ -634,7 +634,7 @@ export function AdminDashboardPage() {
                     <path d="M12 6v6l4 2"/>
                   </svg>
                 </div>
-                <div className="admin-stat-card__value">{stats.total_pending ?? 0}</div>
+                <div className="admin-stat-card__value">{stats.total_pending || 0}</div>
                 <div className="admin-stat-card__label">{t('admin.pendingProducts')}</div>
               </div>
 
@@ -644,7 +644,7 @@ export function AdminDashboardPage() {
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <div className="admin-stat-card__value">{stats.total_approved ?? 0}</div>
+                <div className="admin-stat-card__value">{stats.total_approved || 0}</div>
                 <div className="admin-stat-card__label">{t('admin.approvedProducts')}</div>
               </div>
 
@@ -654,18 +654,8 @@ export function AdminDashboardPage() {
                     <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <div className="admin-stat-card__value">{stats.total_rejected ?? 0}</div>
+                <div className="admin-stat-card__value">{stats.total_rejected || 0}</div>
                 <div className="admin-stat-card__label">{t('admin.rejectedProducts')}</div>
-              </div>
-
-              <div className="admin-stat-card card admin-stat-card--wide">
-                <div className="admin-stat-card__icon admin-stat-card__icon--total">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                </div>
-                <div className="admin-stat-card__value">{admin?.total_moderation ?? 0}</div>
-                <div className="admin-stat-card__label">{t('admin.yourTotalModerations')}</div>
               </div>
             </div>
           )}
