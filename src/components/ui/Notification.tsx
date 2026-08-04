@@ -6,10 +6,11 @@ interface NotificationProps {
   type?: 'error' | 'success' | 'info'
   visible: boolean
   onClose?: () => void
+  onClick?: () => void
   duration?: number
 }
 
-export function Notification({ message, type = 'error', visible, onClose, duration = 5000 }: NotificationProps) {
+export function Notification({ message, type = 'error', visible, onClose, onClick, duration = 5000 }: NotificationProps) {
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
   const autoHideRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -48,7 +49,7 @@ export function Notification({ message, type = 'error', visible, onClose, durati
 
   return (
     <div className='notification-overlay'>
-      <div className={`notification notification--${type} ${show ? 'notification--visible' : ''}`}>
+      <div className={`notification notification--${type} ${show ? 'notification--visible' : ''} ${onClick ? 'underline' : ''}`} onClick={onClick}>
         {message}
       </div>
     </div>
