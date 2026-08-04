@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { sellersApi } from '../api/sellers'
+import { Notification } from '../components/ui/Notification'
 import { useAuth } from '../context/AuthContext'
 import './AuthPage.css'
 
@@ -22,6 +23,10 @@ export function CreateSellerPage() {
       await refreshUser();
       navigate(`/sellers/${seller.username}`);
     } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setError(t('createSeller.alreadyExists'));
+        return;
+      }
       setError(String(err?.response?.data?.message).toLocaleUpperCase() ?? 'Failed to create seller profile');
     } finally {
       setLoading(false);
@@ -57,7 +62,8 @@ export function CreateSellerPage() {
           <p className="text-muted">{t('createSeller.subtitle')}</p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+
+        <Notification message={error} visible={!!error} onClose={() => setError('')} />
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
