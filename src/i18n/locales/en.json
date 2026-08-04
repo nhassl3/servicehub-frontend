@@ -329,7 +329,8 @@
     "forbiddenCreateSeller": "You cannot create a seller profile",
     "forbiddenDesc": "You already have a seller or admin account. You cannot create another seller profile",
     "contactSupport": "If you think this is a mistake, please contact support.",
-    "goToDashboard": "Go to Dashboard"
+    "goToDashboard": "Go to Dashboard",
+    "alreadyExists": "Seller profile already exists. Go to seller dashboard."
   },
   "sellerProfile": {
     "totalSales": "total sales",
@@ -338,7 +339,12 @@
     "sellerNotFound": "Seller not found.",
     "goHome": "Go Home",
     "noProducts": "This seller has no products yet.",
-    "productsByTitle": "Products by {{name}}"
+    "productsByTitle": "Products by {{name}}",
+    "saveDescription": "Save",
+    "savingDescription": "Saving...",
+    "failedSaveDescription": "Failed to save description",
+    "noDescription": "No description yet",
+    "doubleClickToEdit": "Double-click to edit description"
   },
   "common": {
     "currency": "USD",

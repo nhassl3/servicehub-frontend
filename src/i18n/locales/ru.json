@@ -335,7 +335,8 @@
     "forbiddenCreateSeller": "Вам запрещено создавать профиль продавца",
     "forbiddenDesc": "Ваш аккаунт уже относится к продавцам или админам. Вы не можете создать другой профиль продавца",
     "contactSupport": "Если вы считаете это ошибкой, свяжитесь с поддержкой.",
-    "goToDashboard": "Перейти к панели"
+    "goToDashboard": "Перейти к панели",
+    "alreadyExists": "Профиль продавца уже существует. Перейти к панели продавца."
   },
   "sellerProfile": {
     "totalSales": "всего продаж",
@@ -344,7 +345,12 @@
     "sellerNotFound": "Продавец не найден.",
     "goHome": "На главную",
     "noProducts": "У этого продавца пока нет товаров.",
-    "productsByTitle": "Товары продавца {{name}}"
+    "productsByTitle": "Товары продавца {{name}}",
+    "saveDescription": "Сохранить",
+    "savingDescription": "Сохранение…",
+    "failedSaveDescription": "Не удалось сохранить описание",
+    "noDescription": "Описание отсутствует",
+    "doubleClickToEdit": "Двойной клик — изменить описание"
   },
   "common": {
     "currency": "RUB",  
