@@ -22,6 +22,10 @@ export function SellerProfilePage() {
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState('');
+  const [savingDescription, setSavingDescription] = useState(false);
+  const [descriptionError, setDescriptionError] = useState('');
 
   useEffect(() => {
     if (!username) return;
@@ -78,6 +82,26 @@ export function SellerProfilePage() {
     }
   };
 
+  const startEditingDescription = () => {
+    setDescriptionDraft(seller?.description ?? '');
+    setDescriptionError('');
+    setEditingDescription(true);
+  };
+
+  const handleSaveDescription = async () => {
+    setDescriptionError('');
+    setSavingDescription(true);
+    try {
+      const { seller: updated } = await sellersApi.update({ display_name: seller?.display_name, description: descriptionDraft, avatar_url: seller?.avatar_url });
+      setSeller(updated);
+      setEditingDescription(false);
+    } catch (err: any) {
+      setDescriptionError(err?.response?.data?.message.toUpperCase() ?? t('sellerProfile.failedSaveDescription'));
+    } finally {
+      setSavingDescription(false);
+    }
+  };
+
    const closeUploadModal = () => {
     setModalClosing(true);
     setTimeout(() => {
@@ -102,7 +126,7 @@ export function SellerProfilePage() {
   }
 
   const stars = '★'.repeat(Math.round(seller.rating || 0)) + '☆'.repeat(5 - Math.round(seller.rating || 0));
-  const initials = seller.display_name.slice(0, 2).toUpperCase();
+  const initials = seller.display_name?.slice(0, 2).toUpperCase();
 
   return (
     <div className="container section">
@@ -128,8 +152,41 @@ export function SellerProfilePage() {
         <div className="seller-profile-info">
           <h1 className="seller-profile-info__name">{seller.display_name}</h1>
           <div className="seller-profile-info__username text-muted">@{seller.username}</div>
-          {seller.description && (
-            <p className="seller-profile-info__description text-muted">{seller.description}</p>
+          {user?.username === username ? (
+            <div className="seller-profile-info__description-wrap">
+              {editingDescription ? (
+                <>
+                  <textarea
+                    className="input"
+                    rows={3}
+                    value={descriptionDraft}
+                    onChange={e => setDescriptionDraft(e.target.value)}
+                    autoFocus
+                  />
+                  {descriptionError && <div className="auth-error flex-center">{descriptionError}</div>}
+                  <div className="seller-description-actions">
+                    <button className="btn btn-primary" onClick={handleSaveDescription} disabled={savingDescription}>
+                      {savingDescription ? t('sellerProfile.savingDescription') : t('sellerProfile.saveDescription')}
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => setEditingDescription(false)} disabled={savingDescription}>
+                      {t('seller.cancel')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p
+                  className={`seller-profile-info__description text-muted${seller.description ? '' : ' seller-profile-info__description--empty'}`}
+                  onDoubleClick={startEditingDescription}
+                  title={t('sellerProfile.doubleClickToEdit')}
+                >
+                  {seller.description || t('sellerProfile.noDescription')}
+                </p>
+              )}
+            </div>
+          ) : (
+            seller.description && (
+              <p className="seller-profile-info__description text-muted">{seller.description}</p>
+            )
           )}
           <div className="seller-profile-info__stats">
             <div className="seller-stat">

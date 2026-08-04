@@ -23,6 +23,31 @@
   max-width: 600px;
 }
 
+.seller-profile-info__description--empty {
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.seller-profile-info__description:not(.seller-profile-info__description--empty):hover {
+  cursor: pointer;
+}
+
+.seller-profile-info__description-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 600px;
+}
+
+.seller-profile-info__description-wrap textarea {
+  resize: vertical;
+}
+
+.seller-description-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .seller-profile-info__stats {
   display: flex;
   gap: 2rem;
