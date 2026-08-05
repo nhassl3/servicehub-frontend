@@ -1,4 +1,4 @@
-import type { Admin } from '../types'
+import type { Admin, AdminStatistics, AnalyticsGranularity } from '../types'
 import { apiClient } from './client'
 import { fileToBase64 } from './fileUtils'
 
@@ -32,6 +32,11 @@ export const adminsApi = {
 
 		getModeratedProducts: async (): Promise<{ products: any[] }> => {
 			const res = await apiClient.get(`/api/v1/admins/me/moderatedproducts`);
+			return res.data;
+		},
+
+		getStatistics: async (params?: { from?: string; to?: string; granularity?: AnalyticsGranularity }): Promise<AdminStatistics> => {
+			const res = await apiClient.get(`/api/v1/admins/me/statistics`, { params });
 			return res.data;
 		}
 }
