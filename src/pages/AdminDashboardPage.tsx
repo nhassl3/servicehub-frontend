@@ -7,12 +7,106 @@ import { ConvertedPrice } from '../components/converter/ConvertedPrice'
 import { useAuth } from '../context/AuthContext'
 import useCurrencyConverter from '../hooks/useCurrencyConvreter'
 import type { Admin } from '../types'
-import { type ModerationStats, type QueueProduct } from '../types'
+import {
+  type AdminStatistics,
+  type AnalyticsGranularity,
+  type CategorySales,
+  type ModeratePoint,
+  type ModerationStats,
+  type QueueProduct,
+  type RegistrationPoint,
+} from '../types'
 import './AdminDashboardPage.css'
 
 type Tab = 'queue' | 'my' | 'stats';
 
 const PAGE_SIZE = 12;
+
+function formatBucket(bucket: string, granularity: AnalyticsGranularity): string {
+  const d = new Date(bucket);
+  if (Number.isNaN(d.getTime())) return bucket;
+  return granularity === 'hour'
+    ? d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit' })
+    : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function RegistrationsChart({ points, granularity }: { points: RegistrationPoint[]; granularity: AnalyticsGranularity }) {
+  if (points.length === 0) return null;
+  const max = Math.max(1, ...points.map(p => p.count));
+  return (
+    <div className="analytics-chart__bars">
+      {points.map(p => (
+        <div className="analytics-chart__col" key={p.bucket} title={`${formatBucket(p.bucket, granularity)} — ${p.count}`}>
+          <div className="analytics-chart__bar" style={{ height: `${(p.count / max) * 100}%` }}>
+            <span className="analytics-chart__bar-value">{p.count}</span>
+          </div>
+          <span className="analytics-chart__bar-label">{formatBucket(p.bucket, granularity)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ModerationsChart({ points, granularity }: { points: ModeratePoint[]; granularity: AnalyticsGranularity }) {
+  if (points.length === 0) return null;
+
+  const byBucket = new Map<string, ModeratePoint[]>();
+  points.forEach(p => {
+    const list = byBucket.get(p.bucket) ?? [];
+    list.push(p);
+    byBucket.set(p.bucket, list);
+  });
+  const buckets = [...byBucket.keys()].sort();
+  const max = Math.max(1, ...buckets.map(b => (byBucket.get(b) ?? []).reduce((s, p) => s + p.count, 0)));
+
+  const admins = [...new Set(points.map(p => p.admin_name))].filter(Boolean).sort();
+  const adminIndex = new Map(admins.map((name, i) => [name, i]));
+
+  return (
+    <div>
+      <div className="analytics-chart__stacked">
+        {buckets.map(b => (
+          <div className="analytics-chart__col" key={b}>
+            <div className="analytics-chart__stack" title={`${formatBucket(b, granularity)}`}>
+              {(byBucket.get(b) ?? []).map((p, idx) => (
+                <div
+                  key={`${p.admin_id}-${p.bucket}-${idx}`}
+                  className="analytics-chart__stack-seg"
+                  style={{
+                    height: `${(p.count / max) * 100}%`,
+                    background: `var(--analytics-admin-${(adminIndex.get(p.admin_name) ?? 0) % 6})`,
+                  }}
+                  title={`${p.admin_name}: ${p.count}`}
+                />
+              ))}
+            </div>
+            <span className="analytics-chart__bar-label">{formatBucket(b, granularity)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="analytics-legend">
+        {admins.map((name, i) => (
+          <span key={name} className="analytics-legend__item">
+            <span className="analytics-legend__dot" style={{ background: `var(--analytics-admin-${i % 6})` }} />
+            {name}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CategoryRow({ cat, max }: { cat: CategorySales; max: number }) {
+  return (
+    <div className="analytics-category__row">
+      <span className="analytics-category__name">{cat.name}</span>
+      <div className="analytics-category__track">
+        <div className="analytics-category__fill" style={{ width: `${(cat.sales_count / max) * 100}%` }} />
+      </div>
+      <span className="analytics-category__count">{cat.sales_count}</span>
+    </div>
+  );
+}
 
 export function AdminDashboardPage() {
   const { t } = useTranslation();
@@ -36,7 +130,11 @@ export function AdminDashboardPage() {
 
   // Stats
   const [stats, setStats] = useState<ModerationStats | null>(null);
-  const [loadingStats, setLoadingStats] = useState(false);
+
+  // ClickHouse analytics
+  const [analytics, setAnalytics] = useState<AdminStatistics | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [granularity, setGranularity] = useState<AnalyticsGranularity>('day');
 
   // Action states
   const [claimingId, setClaimingId] = useState<string | null>(null);
@@ -109,14 +207,11 @@ export function AdminDashboardPage() {
 
   // ── Load stats ──────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
-    setLoadingStats(true);
     try {
       const data = await moderationApi.stats();
       setStats(data);
     } catch {
       setStats(null);
-    } finally {
-      setLoadingStats(false);
     }
   }, []);
 
@@ -124,6 +219,23 @@ export function AdminDashboardPage() {
     if (tab === 'queue') loadQueue();
     if (tab === 'my') loadMy(); 
   }, [tab, loadQueue, loadMy, loadStats]);
+
+  // ── Load ClickHouse analytics ────────────────────────────────────────
+  const loadAnalytics = useCallback(async (gran: AnalyticsGranularity = granularity) => {
+    setLoadingAnalytics(true);
+    try {
+      const data = await adminsApi.getStatistics({ granularity: gran });
+      setAnalytics(data);
+    } catch {
+      setAnalytics(null);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  }, [granularity]);
+
+  useEffect(() => {
+    if (tab === 'stats') loadAnalytics(granularity);
+  }, [tab, granularity, loadAnalytics]);
 
   // ── Actions ─────────────────────────────────────────────────────────
   const handleClaim = async (productId: string) => {
@@ -612,50 +724,133 @@ export function AdminDashboardPage() {
         <div className="admin-panel">
           <div className="admin-panel__header">
             <h2>{t('admin.statistics')}</h2>
-            <button className="btn btn-secondary btn-sm" onClick={loadStats} disabled={loadingStats}>
-              {t('admin.refresh')}
-            </button>
+            <div className="analytics-toolbar">
+              <div className="analytics-segmented">
+                <button
+                  className={`analytics-segmented__btn${granularity === 'day' ? ' analytics-segmented__btn--active' : ''}`}
+                  onClick={() => setGranularity('day')}
+                >
+                  {t('admin.day')}
+                </button>
+                <button
+                  className={`analytics-segmented__btn${granularity === 'hour' ? ' analytics-segmented__btn--active' : ''}`}
+                  onClick={() => setGranularity('hour')}
+                >
+                  {t('admin.hour')}
+                </button>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => loadAnalytics(granularity)} disabled={loadingAnalytics}>
+                {t('admin.refresh')}
+              </button>
+            </div>
           </div>
 
-          {loadingStats ? (
+          {loadingAnalytics ? (
             <div className="flex-center" style={{ padding: '3rem' }}>
               <div className="spinner" />
             </div>
-          ) : !stats ? (
+          ) : !analytics ? (
             <div className="admin-empty-state">
-              <p className="text-muted">{t('admin.noStats')}</p>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              <p className="text-muted">{t('admin.noAnalytics')}</p>
             </div>
           ) : (
-            <div className="admin-stats-grid">
-              <div className="admin-stat-card card">
-                <div className="admin-stat-card__icon admin-stat-card__icon--pending">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 6v6l4 2"/>
-                  </svg>
+            <div className="analytics">
+              <div className="analytics-status-grid">
+                <div className="admin-stat-card card analytics-status-card analytics-status-card--verified">
+                  <div className="admin-stat-card__icon admin-stat-card__icon--approved">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div className="admin-stat-card__value">{analytics.products.verified_count ?? 0}</div>
+                  <div className="admin-stat-card__label">{t('admin.statusVerified')}</div>
                 </div>
-                <div className="admin-stat-card__value">{stats.total_pending || 0}</div>
-                <div className="admin-stat-card__label">{t('admin.pendingProducts')}</div>
+                <div className="admin-stat-card card analytics-status-card analytics-status-card--pending">
+                  <div className="admin-stat-card__icon admin-stat-card__icon--pending">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 6v6l4 2"/>
+                    </svg>
+                  </div>
+                  <div className="admin-stat-card__value">{analytics.products.pending_count ?? 0}</div>
+                  <div className="admin-stat-card__label">{t('admin.statusPending')}</div>
+                </div>
+                <div className="admin-stat-card card analytics-status-card analytics-status-card--rejected">
+                  <div className="admin-stat-card__icon admin-stat-card__icon--rejected">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div className="admin-stat-card__value">{analytics.products.rejected_count ?? 0}</div>
+                  <div className="admin-stat-card__label">{t('admin.statusRejected')}</div>
+                </div>
               </div>
 
-              <div className="admin-stat-card card">
-                <div className="admin-stat-card__icon admin-stat-card__icon--approved">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
+              <div className="analytics-grid">
+                <div className="card analytics-card">
+                  <div className="analytics-card__header">
+                    <h3>{t('admin.topCategories')}</h3>
+                  </div>
+                  {analytics.top_categories.length === 0 ? (
+                    <p className="text-muted analytics-card__empty">{t('admin.noAnalytics')}</p>
+                  ) : (
+                    <div className="analytics-category">
+                      {analytics.top_categories.map((cat, i) => (
+                        <CategoryRow
+                          key={cat.category_id ?? `cat-${i}`}
+                          cat={cat}
+                          max={Math.max(1, ...analytics.top_categories.map(c => c.sales_count))}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="admin-stat-card__value">{stats.total_approved || 0}</div>
-                <div className="admin-stat-card__label">{t('admin.approvedProducts')}</div>
+
+                <div className="card analytics-card">
+                  <div className="analytics-card__header">
+                    <h3>{t('admin.topProducts')}</h3>
+                    <span className="analytics-card__hint">{t('admin.byRating')}</span>
+                  </div>
+                  {analytics.top_products.length === 0 ? (
+                    <p className="text-muted analytics-card__empty">{t('admin.noAnalytics')}</p>
+                  ) : (
+                    <div className="analytics-top">
+                      {analytics.top_products.map(({ product }, i) => (
+                        <Link key={product.id} to={`/products/${product.id}`} className="analytics-top__item">
+                          <span className="analytics-top__rank">#{i + 1}</span>
+                          <span className="analytics-top__title">{product.title}</span>
+                          <span className="analytics-top__rating">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.977 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                            {typeof product.rating === 'number' ? product.rating.toFixed(1) : '—'}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="admin-stat-card card">
-                <div className="admin-stat-card__icon admin-stat-card__icon--rejected">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
+              <div className="analytics-grid">
+                <div className="card analytics-card">
+                  <div className="analytics-card__header">
+                    <h3>{t('admin.registrations')}</h3>
+                  </div>
+                  <RegistrationsChart points={analytics.registrations ?? []} granularity={granularity} />
+                  {!analytics.registrations?.length && <p className="text-muted analytics-card__empty">{t('admin.noAnalytics')}</p>}
                 </div>
-                <div className="admin-stat-card__value">{stats.total_rejected || 0}</div>
-                <div className="admin-stat-card__label">{t('admin.rejectedProducts')}</div>
+
+                <div className="card analytics-card">
+                  <div className="analytics-card__header">
+                    <h3>{t('admin.moderationsByAdmin')}</h3>
+                  </div>
+                  <ModerationsChart points={analytics.moderates ?? []} granularity={granularity} />
+                  {!analytics.moderates?.length && <p className="text-muted analytics-card__empty">{t('admin.noAnalytics')}</p>}
+                </div>
               </div>
             </div>
           )}
