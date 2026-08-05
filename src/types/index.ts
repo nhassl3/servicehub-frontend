@@ -157,4 +157,42 @@ export interface ModerationStats {
   total_rejected: number;
 }
 
+export interface ProductStatusStats {
+  verified_count: number;
+  pending_count: number;
+  rejected_count: number;
+}
+
+export interface TopProductItem {
+  product: Product;
+}
+
+export interface CategorySales {
+  category_id: number;
+  name: string;
+  sales_count: number;
+}
+
+export interface RegistrationPoint {
+  bucket: string;
+  count: number;
+}
+
+export interface ModeratePoint {
+  bucket: string;
+  count: number;
+  admin_id: string;
+  admin_name: string;
+}
+
+export interface AdminStatistics {
+  products: ProductStatusStats;
+  top_products: TopProductItem[];
+  top_categories: CategorySales[];
+  registrations: RegistrationPoint[];
+  moderates: ModeratePoint[];
+}
+
+export type AnalyticsGranularity = 'day' | 'hour';
+
 export type UserRole = 'buyer' | 'seller' | 'admin';
