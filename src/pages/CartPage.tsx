@@ -13,7 +13,7 @@ const DEBOUNCE_MS = 400;
 export function CartPage() {
   const { t } = useTranslation();
   const { exchangeRates } = useCurrencyConverter();
-  const { cart, itemCount, removeItem, updateQty, isLoading } = useCart();
+  const { cart, itemCount, removeItem, updateQty, isLoading, refreshCart } = useCart();
   const navigate = useNavigate();
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState('');
@@ -74,6 +74,7 @@ export function CartPage() {
     try {
       await flushPending();
       const { order } = await ordersApi.create();
+      await refreshCart();
       navigate(`/orders/${order.id}`);
     } catch (err: any) {
       if (err?.response?.data?.message?.toLocaleLowerCase().includes('insufficient funds')) {

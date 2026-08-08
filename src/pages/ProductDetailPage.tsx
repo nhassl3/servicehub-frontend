@@ -42,55 +42,70 @@ export function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState('');
 
-  // Effect 1: public data — product, seller, reviews.
+  // Effect 1: product + seller. Everything else (reviews, wishlist, cart)
+  // is gated on a successfully fetched, available product.
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setLoading(true);
+    setProduct(null);
+    setProductInPending(false);
+    setSeller(null);
+    setReviews([]);
+    setReviewTotal(0);
+    setRating(0);
+    setInWishlist(false);
 
-    productsApi.get(id).then(({ product }) => {
-      if (cancelled) return;
-      if (product.status === 'draft' || product.status === 'inactive') {
-        setProductInPending(true);
-        setProduct(null);
-        setLoading(false);
-        return;
-      }
-      setProduct(product);
-      setRating(product.rating);
-      sellersApi.getProfileByUUID(product.seller_id).catch(() => null).then(d => {
-        if (!cancelled && d) setSeller(d.seller);
-      });
-    });
-
-    reviewsApi.list(id, { limit: 20 }).then(d => {
-      if (cancelled) return;
-      setReviews(d.reviews ?? []);
-      setReviewTotal(d.total);
-    }).finally(() => { if (!cancelled) setLoading(false); });
+    productsApi.get(id)
+      .then(({ product }) => {
+        if (cancelled) return;
+        if (product.status === 'draft' || product.status === 'inactive') {
+          setProductInPending(true);
+          return;
+        }
+        setProduct(product);
+        setRating(product.rating);
+        sellersApi.getProfileByUUID(product.seller_id).catch(() => null).then(d => {
+          if (!cancelled && d) setSeller(d.seller);
+        });
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
   }, [id]);
 
-  // Effect 2: wishlist — auth-gated
+  // Effect 2: reviews — only once an available product has loaded.
   useEffect(() => {
-    if (!id || !isAuthenticated) return;
+    if (!id || !product) return;
+    let cancelled = false;
+    reviewsApi.list(id, { limit: 20 }).then(d => {
+      if (cancelled) return;
+      setReviews(d.reviews ?? []);
+      setReviewTotal(d.total);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [id, product]);
+
+  // Effect 3: wishlist — auth-gated, only once an available product has loaded.
+  useEffect(() => {
+    if (!id || !product || !isAuthenticated) return;
     let cancelled = false;
     wishlistApi.exists(id).then(d => {
       if (cancelled || !d?.in_wishlist) return;
       setInWishlist(d.in_wishlist);
-    });
+    }).catch(() => {});
     return () => { cancelled = true; };
-  }, [id, isAuthenticated]);
+  }, [id, product, isAuthenticated]);
 
   // Cleanup wishlist debounce on unmount
   useEffect(() => {
     return () => clearTimeout(wishlistDebounceRef.current);
   }, []);
 
-  // Effect 3: cart status
+  // Effect 4: cart status
   useEffect(() => {
-    if (!id) return;
+    if (!id || !product) return;
     let cancelled = false;
     productInCart(id)
     .then(inCart => {
@@ -100,7 +115,7 @@ export function ProductDetailPage() {
       setInCart(false)
       });
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, product]);
 
   const handleAddToCart = async () => {
     if (!product) return;

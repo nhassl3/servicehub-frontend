@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { userApi } from '../api/users'
+import { Notification } from '../components/ui/Notification'
 import { useAuth } from '../context/AuthContext'
 import './ProfilePage.css'
 
@@ -102,6 +103,11 @@ export function ProfilePage() {
     <div className="container section">
       <h1 className="page-title">{t('profile.title')} · {user.username.toUpperCase()}</h1>
 
+      <Notification message={error} visible={!!error} onClose={() => setError('')} />
+      <Notification message={success} type="success" visible={!!success} onClose={() => setSuccess('')} />
+      <Notification message={uploadError} visible={!!uploadError} onClose={() => setUploadError('')} />
+      <Notification message={uploadSuccess} type="success" visible={!!uploadSuccess} onClose={() => setUploadSuccess('')} />
+
       <div className="profile-layout">
         {/* ── Left: Avatar & Quick Nav ──────────────────────────────────────── */}
         <aside className="profile-sidebar card">
@@ -185,10 +191,6 @@ export function ProfilePage() {
             <div className="card profile-panel">
               <h1>{t('profile.changePassword')}</h1>
 
-              {error && <div className="error">{error}</div>}
-
-              {success && <div className="success">{success}</div>}
-
                <form className="auth-form" onSubmit={handleChangePassword}>
                 <div className="form-group">
                   <label className="form-label">{t('profile.oldPassword')}</label>
@@ -236,9 +238,6 @@ export function ProfilePage() {
 
           {activeTab === 'update' && (
               <div className="card profile-panel">
-                {error && <div className="error">{error}</div>}
-
-                {success && <div className="success">{success}</div>}
 
                 <form className="auth-form" onSubmit={handleChangePhoto}>
                   <div className="form-group">
@@ -270,8 +269,6 @@ export function ProfilePage() {
               <h2 className="modal-title">{t('seller.uploadAvatarTitle')}</h2>
               <button className="modal-close" onClick={closeUploadModal}>&times;</button>
             </div>
-            {uploadError && <div className="auth-error flex-center">{uploadError.toUpperCase()}</div>}
-            {uploadSuccess && <div className="success flex-center">{uploadSuccess.toUpperCase()}</div>}
             <form onSubmit={handleChangePhoto} className="auth-form">
               <div className="form-group">
                 <label className="form-label">{t('seller.selectAvatar')}</label>
