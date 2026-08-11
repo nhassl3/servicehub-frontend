@@ -171,6 +171,7 @@ export interface CategorySales {
   category_id: number;
   name: string;
   sales_count: number;
+  total: number;
 }
 
 export interface RegistrationPoint {
