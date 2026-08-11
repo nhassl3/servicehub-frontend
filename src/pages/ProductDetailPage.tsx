@@ -185,7 +185,7 @@ export function ProductDetailPage() {
 
   if (!product) {
     return (
-       <Notification message={`${t('product.notAvailable')} ${t('product.backToCatalog')}`} type='info' visible={true} onClose={() => window.location.href = '/catalog'} duration={1899} />
+       <Notification message={`${t('product.notFound')} ${t('product.backToCatalog')}`} type='info' visible={true} onClose={() => window.location.href = '/catalog'} duration={1899} />
     );
   }
 
