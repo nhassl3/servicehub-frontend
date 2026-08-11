@@ -50,6 +50,7 @@
   },
   "product": {
     "addToCart": "Add to Cart",
+    "addToCartError": "Failed to add item to cart. Please try again.",
     "adding": "Adding\u2026",
     "viewCart": "View Cart",
     "loginToBuy": "Login to Buy",
