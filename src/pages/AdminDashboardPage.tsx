@@ -99,7 +99,7 @@ function ModerationsChart({ points, granularity }: { points: ModeratePoint[]; gr
 function CategoryRow({ cat, max }: { cat: CategorySales; max: number }) {
   return (
     <div className="analytics-category__row">
-      <span className="analytics-category__name">{cat.name}</span>
+      <span className="analytics-category__name">{cat.name ? cat.name : `ID: ${cat.category_id}`}</span>
       <div className="analytics-category__track">
         <div className="analytics-category__fill" style={{ width: `${(cat.sales_count / max) * 100}%` }} />
       </div>
@@ -225,7 +225,14 @@ export function AdminDashboardPage() {
     setLoadingAnalytics(true);
     try {
       const data = await adminsApi.getStatistics({ granularity: gran });
-      setAnalytics(data);
+      setAnalytics({
+        ...data,
+        products: data.products ?? { verified_count: 0, pending_count: 0, rejected_count: 0 },
+        top_products: (data.top_products ?? []).filter(item => item?.product?.id),
+        top_categories: data.top_categories ?? [],
+        registrations: data.registrations ?? [],
+        moderates: data.moderates ?? [],
+      });
     } catch {
       setAnalytics(null);
     } finally {
@@ -765,7 +772,7 @@ export function AdminDashboardPage() {
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                   </div>
-                  <div className="admin-stat-card__value">{analytics.products.verified_count ?? 0}</div>
+                  <div className="admin-stat-card__value">{analytics.products?.verified_count ?? 0}</div>
                   <div className="admin-stat-card__label">{t('admin.statusVerified')}</div>
                 </div>
                 <div className="admin-stat-card card analytics-status-card analytics-status-card--pending">
@@ -775,7 +782,7 @@ export function AdminDashboardPage() {
                       <path d="M12 6v6l4 2"/>
                     </svg>
                   </div>
-                  <div className="admin-stat-card__value">{analytics.products.pending_count ?? 0}</div>
+                  <div className="admin-stat-card__value">{analytics.products?.pending_count ?? 0}</div>
                   <div className="admin-stat-card__label">{t('admin.statusPending')}</div>
                 </div>
                 <div className="admin-stat-card card analytics-status-card analytics-status-card--rejected">
@@ -784,7 +791,7 @@ export function AdminDashboardPage() {
                       <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                   </div>
-                  <div className="admin-stat-card__value">{analytics.products.rejected_count ?? 0}</div>
+                  <div className="admin-stat-card__value">{analytics.products?.rejected_count ?? 0}</div>
                   <div className="admin-stat-card__label">{t('admin.statusRejected')}</div>
                 </div>
               </div>
@@ -794,7 +801,7 @@ export function AdminDashboardPage() {
                   <div className="analytics-card__header">
                     <h3>{t('admin.topCategories')}</h3>
                   </div>
-                  {analytics.top_categories.length === 0 ? (
+                  {!analytics.top_categories?.length ? (
                     <p className="text-muted analytics-card__empty">{t('admin.noAnalytics')}</p>
                   ) : (
                     <div className="analytics-category">
@@ -814,22 +821,25 @@ export function AdminDashboardPage() {
                     <h3>{t('admin.topProducts')}</h3>
                     <span className="analytics-card__hint">{t('admin.byRating')}</span>
                   </div>
-                  {analytics.top_products.length === 0 ? (
+                  {!analytics.top_products?.length ? (
                     <p className="text-muted analytics-card__empty">{t('admin.noAnalytics')}</p>
                   ) : (
                     <div className="analytics-top">
-                      {analytics.top_products.map(({ product }, i) => (
-                        <Link key={product.id} to={`/products/${product.id}`} className="analytics-top__item">
-                          <span className="analytics-top__rank">#{i + 1}</span>
-                          <span className="analytics-top__title">{product.title}</span>
-                          <span className="analytics-top__rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
-                              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.977 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                            </svg>
-                            {typeof product.rating === 'number' ? product.rating.toFixed(1) : '—'}
-                          </span>
-                        </Link>
-                      ))}
+                      {analytics.top_products.map(({ product }, i) => {
+                        if (!product?.id) return null;
+                        return (
+                          <Link key={product.id} to={`/products/${product.id}`} className="analytics-top__item">
+                            <span className="analytics-top__rank">#{i + 1}</span>
+                            <span className="analytics-top__title">{product.title}</span>
+                            <span className="analytics-top__rating">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
+                                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.977 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                              </svg>
+                              {typeof product.rating === 'number' ? product.rating.toFixed(1) : '—'}
+                            </span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
