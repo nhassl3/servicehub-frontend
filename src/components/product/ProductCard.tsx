@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -5,6 +6,7 @@ import { useCart } from '../../context/CartContext'
 import useCurrencyConverter from '../../hooks/useCurrencyConvreter'
 import type { Product } from '../../types'
 import { ConvertedPrice } from '../converter/ConvertedPrice'
+import { Notification } from '../ui/Notification'
 import './ProductCard.css'
 
 interface Props {
@@ -17,17 +19,27 @@ export function ProductCard({ product, slug }: Props & { slug?: string }) {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
 
+  const [error, setError] = useState<string | null>(null);
+
   const currency = t('common.currency');
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!isAuthenticated) return;
-    await addItem(product.id);
+    await addItem(product.id).catch((err) => {
+      if (err.response?.status === 404) {
+        setError(t('product.notFound'));
+        return;
+      }
+      setError(t('product.addToCartError'));
+    });
   };
 
   const stars = '★'.repeat(Math.round(product.rating)) + '☆'.repeat(5 - Math.round(product.rating || 0));
 
   return (
+    <>
+    <Notification message={error || 'Failed to add item to cart'} type="error" visible={!!error} onClose={() => setError(null)} />
     <Link to={`/products/${product.id}`} className="product-card">
       <div className="product-card__body">
         <div className="product-card__category-id">{slug}</div>
@@ -59,5 +71,6 @@ export function ProductCard({ product, slug }: Props & { slug?: string }) {
         )}
       </div>
     </Link>
+    </>
   );
 }
