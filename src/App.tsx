@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext'
 import { ScrollToTop } from './hooks/useScrollToTop'
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { BalancePage } from './pages/BalancePage'
 import { CartPage } from './pages/CartPage'
 import { CatalogPage } from './pages/CatalogPage'
@@ -58,6 +59,8 @@ function AppRoutes() {
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="sellers/:username" element={<SellerProfilePage />} />
+
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
         {/* Guest-only */}
         <Route path="login" element={<RequireGuest><LoginPage /></RequireGuest>} />
