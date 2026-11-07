@@ -371,7 +371,26 @@
     "body2": "has not been verified yet.",
     "footer": "Please check your inbox for the verification link.",
     "resend": "Resend email",
-    "resendIn": "Resend in"
+    "resendIn": "Resend in",
+    "changeEmail": {
+      "_": "Change email address",
+      "title": "Changing email address...",
+      "body1": "Are you sure you want to change your email address",
+      "body2": "to another email address?",
+      "footer": "Please check that you",
+      "backButton": "Back to verification",
+      "no": "Cancel",
+      "yes": "Change",
+      "modal": {
+        "title": "Changing email address",
+        "label": "Provide an email address (that you have access to):",
+        "placeholder": "Enter an email address, for example, servicehub@servicehub.com",
+        "failedToResetEmail": "Failed to reset email address",
+        "alreadyUses": "This email address already uses",
+        "alreadyReset": "Email address already was reset. Please wait 72 hours to reset again",
+        "invalidEmail": "Please type correct email address"
+      }
+    }
   },
   "errors": {
     "emailNotFound": "Email address not found!",
