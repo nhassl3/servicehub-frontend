@@ -2,6 +2,12 @@ import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import { tokenStorage } from '../store/tokenStorage'
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:8082';
+export const BASE_OAUTH_URL = (import.meta.env.VITE_OAUTH_URL as string) || 'http://openig.servicehub.org'; // to proxy domain
+
+export const oauthClient = axios.create({
+  baseURL: '',
+  headers: { 'Content-Type': 'application/json' },
+})
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
