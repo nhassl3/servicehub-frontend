@@ -1,6 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { AxiosError } from 'axios'
-import { authApi } from '../api/auth'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { authApi, oauthApi } from '../api/auth'
 import { tokenStorage } from '../store/tokenStorage'
 import type { User } from '../types'
 
@@ -38,6 +38,9 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   isEmailVerified: boolean;
+  doLogin: () => Promise<void>;
+  setUser: (value: React.SetStateAction<User | null>) => void;
+  oAuthLogin: (accessToken: string) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   resetPassword: (resetToken: string, newPassword: string) => Promise<void>;
   register: (data: { username: string; email: string; password: string; full_name: string }) => Promise<void>;
@@ -54,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return cached ? JSON.parse(cached) : null;
   });
   const [isLoading, setIsLoading] = useState(true);
+  const isHandlingOAuth = useRef(false);
 
   const cacheUser = useCallback((u: User | null) => {
     if (u) {
@@ -106,6 +110,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [cacheUser]);
 
   useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const accessToken =
+      search.get('access_token') || search.get('token') || search.get('accessToken') || search.get('oauth_token') ||
+      hash.get('access_token') || hash.get('token') || hash.get('accessToken') || hash.get('oauth_token');
+
+    if (!accessToken) return;
+
+    isHandlingOAuth.current = true;
+    window.history.replaceState(null, '', window.location.pathname);
+
+    let cancelled = false;
+    setIsLoading(true);
+    authApi.oAuthLogin(accessToken)
+      .then((data) => {
+        if (cancelled) return;
+        tokenStorage.setTokens(data.access_token, data.refresh_token);
+        setUser(data.user);
+        cacheUser(data.user);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        tokenStorage.clearTokens();
+        setUser(null);
+        cacheUser(null);
+      })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [cacheUser]);
+
+  useEffect(() => {
+    if (isHandlingOAuth.current) return;
     let cancelled = false;
     const token = tokenStorage.getAccessToken();
     if (!token) { setIsLoading(false); return; }
@@ -149,6 +186,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('auth:session-expired', handleExpired);
     return () => window.removeEventListener('auth:session-expired', handleExpired);
+  }, [cacheUser]);
+
+  const doLogin = useCallback(async () => {
+    await oauthApi.doLogin();
+  }, []);
+
+  const oAuthLogin = useCallback(async (accessToken: string) => {
+    const data = await authApi.oAuthLogin(accessToken);
+    tokenStorage.setTokens(data.access_token, data.refresh_token);
+    setUser(data.user);
+    cacheUser(data.user);
   }, [cacheUser]);
 
   const login = useCallback(async (username: string, password: string) => {
@@ -196,6 +244,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isAuthenticated: !!user,
       isEmailVerified,
+      doLogin,
+      setUser,
+      oAuthLogin,
       login,
       resetPassword,
       register,
