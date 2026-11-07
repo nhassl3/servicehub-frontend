@@ -10,14 +10,12 @@ export interface User {
   updated_at: string;
 }
 
-export interface Admin {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin';
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+export interface oAuthTokenData {
+  access_token: string;
+};
+
+export interface oAuthResponse {
+  email: string
 }
 
 export interface Category {
