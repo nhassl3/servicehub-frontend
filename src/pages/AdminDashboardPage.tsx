@@ -341,7 +341,6 @@ export function AdminDashboardPage() {
       setUploadError(err?.response?.data?.error ?? t('admin.failedUploadAvatar'));
     } finally {
       setUploadingAvatar(false);
-      window.location.reload();
     }
   };
 
@@ -961,7 +960,7 @@ export function AdminDashboardPage() {
                   ref={fileInputRef}
                   className="input"
                   type="file"
-                  accept="image/*"
+                  accept="image/webp, image/jpeg, image/png"
                   onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
                   required
                 />

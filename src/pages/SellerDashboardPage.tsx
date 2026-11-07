@@ -107,8 +107,7 @@ export function SellerDashboardPage() {
     setUploadSuccess('');
     setUploadingAvatar(true);
     try {
-      const { seller: updated } = await sellersApi.uploadAvatar(avatarFile);
-      setSeller(updated);
+      await sellersApi.uploadAvatar(avatarFile);
       setUploadSuccess(t('seller.avatarChanged'));
       setAvatarFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -116,7 +115,6 @@ export function SellerDashboardPage() {
       setUploadError(err?.response?.data?.message.toUpperCase() ?? t('seller.failedUploadAvatar'));
     } finally {
       setUploadingAvatar(false);
-      window.location.reload();
     }
   };
 
@@ -263,7 +261,7 @@ export function SellerDashboardPage() {
                   ref={fileInputRef}
                   className="input"
                   type="file"
-                  accept="image/*"
+                  accept="image/webp, image/jpeg, image/png"
                   onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
                   required
                 />

@@ -14,7 +14,7 @@ type FormKey = 'username' | 'password';
 
 export function LoginPage() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, doLogin } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState<Record<FormKey, string>>({ username: '', password: '' });
@@ -66,8 +66,17 @@ export function LoginPage() {
     }
   };
 
-  const handleYandexLogin = () => {
-    window.location.href = '/api/v1/auth/yandex';
+  const handleYandexLogin = async () => {
+    setTouched({ username: true, password: true });
+    setServerError('');
+    setLoading(true);
+    try {
+      await doLogin();
+    } catch (err: any) {
+      setServerError(err?.response?.data?.message.toLocaleUpperCase() ?? t('login.invalidCredentials'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

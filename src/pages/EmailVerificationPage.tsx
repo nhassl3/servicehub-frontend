@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../context/AuthContext'
 import { authApi } from '../api/auth'
+import { useAuth } from '../context/AuthContext'
 import { tokenStorage } from '../store/tokenStorage'
 import './EmailVerificationPage.css'
 
@@ -10,10 +10,14 @@ const VERIFY_EMAIL_KEY = 2;
 const SENT_KEY = 'sh_verify_email_sent';
 
 export function EmailVerificationPage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { t } = useTranslation();
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
   const [success, setSuccess] = useState(false);
+  const [changeEmail, setChangeEmail] = useState<boolean>(false);
+  const [showChangeEmailModal, setShowChangeEmailModal] = useState<boolean>(false);
+  const [errModalMessage, setErrorModalMessage] = useState<string>("");
+  const [newEmail, setNewEmail] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -84,6 +88,44 @@ export function EmailVerificationPage() {
     }
   }, [operationId]);
 
+  const resetEmail = useCallback(async (newEmail: string) => {
+    if (!showChangeEmailModal) return;
+    setLoading(true);
+    try {
+      const { operation_id } = await authApi.resetEmail({new_email: newEmail});
+      setShowChangeEmailModal(false);
+      setOperationId(operation_id);
+      setChangeEmail(false);
+      setSuccess(true);
+      setError(false);
+      setUser((currentUser) => currentUser ? { ...currentUser, email: newEmail } : currentUser);
+    } catch (err: any) {
+      setError(true);
+      setSuccess(false);
+      const errMessage = err?.response?.data?.message.toLowerCase();
+      if (errMessage) {
+        switch (true) {
+          case errMessage.includes("already exists"):
+            setErrorModalMessage(t("emailVerification.changeEmail.modal.alreadyUses"));
+            break;
+          case errMessage.includes("email already reset"):
+            setErrorModalMessage(t("emailVerification.changeEmail.modal.alreadyReset"))
+            break;
+          case errMessage.includes('invalid resetemailrequest.newemail'):
+            setErrorModalMessage(t("emailVerification.changeEmail.modal.invalidEmail"));
+            break;
+          default:
+            setErrorModalMessage(errMessage);
+            break;
+        }
+        return
+      }
+      setErrorModalMessage(t("emailVerification.changeEmail.modal.failedToResetEmail"))
+    } finally {
+      setLoading(false);
+    }
+  }, [showChangeEmailModal])
+
   const locked = success || error || loading;
 
   const handleChange = (index: number, value: string) => {
@@ -131,9 +173,32 @@ export function EmailVerificationPage() {
     }
   };
 
+  const handleChangeEmailAddress = (email: string) => {
+    if (!showChangeEmailModal) return;
+    resetEmail(email);
+  }
+
   return (
-    <div className="email-verify-page">
-      <div className="email-verify-card">
+    <>
+     <div className="email-verify-page">
+      {changeEmail ? (
+        <div className="email-verify-card">
+          <button className="email-verify-btn__back text-muted" onClick={() => setChangeEmail(false)}>← {t("emailVerification.changeEmail.backButton")}</button>
+          <h1 className="email-verify-title">{t('emailVerification.changeEmail.title')}</h1>
+          <p className="email-verify-subtitle">
+            {t('emailVerification.changeEmail.body1')} <strong>{user?.email}</strong> {t('emailVerification.changeEmail.body2')}
+            <span> {t('emailVerification.changeEmail.footer')}</span>
+          </p>
+          <div className="email-verify-selector">
+            <button className="btn btn-primary" onClick={() => {
+              setChangeEmail(false);
+              setShowChangeEmailModal(true);
+            }}>{t("emailVerification.changeEmail.yes")}</button>
+            <button className="btn btn-secondary" onClick={() => setChangeEmail(false)}>{t("emailVerification.changeEmail.no")}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="email-verify-card">
         <h1 className="email-verify-title">{t('emailVerification.title')}</h1>
         <p className="email-verify-subtitle">
           {t('emailVerification.body1')} <strong>{user?.email}</strong> {t('emailVerification.body2')}
@@ -160,17 +225,48 @@ export function EmailVerificationPage() {
         </div>
 
         <div className="email-verify-resend">
+          <div className="email-verification-footer">
           {cooldown > 0 ? (
             <span className="email-verify-cooldown">
               {t('emailVerification.resendIn')} {Math.floor(cooldown / 60)}:{String(cooldown % 60).padStart(2, '0')}
             </span>
           ) : (
-            <button className="email-verify-resend-btn" onClick={handleResend} disabled={resendLoading}>
-              {resendLoading ? t('emailVerification.sending') || 'Sending…' : t('emailVerification.resend')}
+            <button className="email-verify-btn" onClick={handleResend} disabled={resendLoading}>
+              {resendLoading ? t('emailVerification.sending') || 'Sending...' : t('emailVerification.resend')}
             </button>
           )}
+          <button className="email-verify-btn" onClick={() => setChangeEmail(true)} disabled={changeEmail || resendLoading}>
+                  {t('emailVerification.changeEmail._')}
+          </button>
+          </div>
         </div>
       </div>
+      )}
     </div>
+
+    {showChangeEmailModal && (
+      <div className="modal-overlay">
+        <div className="modal-content card">
+          <div className="modal-header">
+            <h2 className="modal-title">{t("emailVerification.changeEmail.modal.title")}</h2>
+            <button className="modal-close" onClick={() => setShowChangeEmailModal(false)}>×</button>
+          </div>
+          {errModalMessage && (
+            <div className="modal-review__error-section">
+              <span className="error">{errModalMessage}</span>
+            </div>
+          )}
+          <div className="modal-review__change-section">
+            <label htmlFor="email" className="form-label">{t("emailVerification.changeEmail.modal.label")}</label>
+            <input type="email" className="input" id="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={t("emailVerification.changeEmail.modal.placeholder")} />
+          </div>
+          <div className="modal-review__actions">
+            <button className="btn btn-success btn-review-action" onClick={() => handleChangeEmailAddress(newEmail)}>{t("emailVerification.changeEmail.yes")}</button>
+            <div className="btn btn-secondary" onClick={() => setShowChangeEmailModal(false)}>{t("emailVerification.changeEmail.no")}</div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

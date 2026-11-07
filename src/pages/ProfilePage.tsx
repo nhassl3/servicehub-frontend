@@ -8,7 +8,7 @@ import './ProfilePage.css'
 
 export function ProfilePage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -77,7 +77,8 @@ export function ProfilePage() {
         setUploadSuccess('');
         setUploadingAvatar(true);
         try {
-          await userApi.uploadAvatar(avatarFile);
+          const { user: updated } = await userApi.uploadAvatar(avatarFile);
+          setUser(updated);
           setUploadSuccess(t('seller.avatarChanged'));  
           setAvatarFile(null);
           if (fileInputRef.current) fileInputRef.current.value = '';  
@@ -85,7 +86,6 @@ export function ProfilePage() {
           setUploadError(err?.response?.data?.message ?? t('seller.failedUploadAvatar'));
         } finally {
           setUploadingAvatar(false);
-          window.location.reload();
         }
   };
 
@@ -276,7 +276,7 @@ export function ProfilePage() {
                   ref={fileInputRef}
                   className="input"
                   type="file"
-                  accept="image/*"
+                  accept="image/webp, image/jpeg, image/png"
                   onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
                   required
                 />

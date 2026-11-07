@@ -101,7 +101,57 @@
   text-align: center;
 }
 
-.email-verify-resend-btn {
+/* Modal window */
+.modal-review__change-section {
+  margin-bottom: 1rem;
+}
+
+.modal-review__change-section .form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.modal-review__error-section {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.modal-review__change-section input {
+  resize: vertical;
+}
+
+.modal-review__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-review-action {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Select next step */
+.email-verify-selector {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 3em;
+  flex: 1;
+  width: auto;
+}
+
+.email-verification-footer {
+  display: flex;
+  gap: 5.5px;
+  flex-direction: column;
+}
+
+.email-verify-btn {
   background: none;
   border: none;
   color: var(--color-primary, #3b82f6);
@@ -111,8 +161,21 @@
   text-underline-offset: 2px;
 }
 
-.email-verify-resend-btn:hover {
+.email-verify-btn:hover {
   opacity: 0.8;
+}
+
+.email-verify-btn__back {
+  display: inline-flex;
+  justify-content: start;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.email-verify-btn__back:hover {
+  color: var(--color-primary);
 }
 
 .email-verify-cooldown {
