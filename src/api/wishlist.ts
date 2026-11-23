@@ -1,23 +1,23 @@
 import type { WishlistItem } from '../types'
-import { apiClient } from './client'
+import { userClient } from './client'
 
 export const wishlistApi = {
   get: async (): Promise<{ items: WishlistItem[] }> => {
-    const res = await apiClient.get('/api/v1/wishlist');
+    const res = await userClient.get('/api/v1/wishlist');
     return res.data;
   },
 
   exists: async (product_id: string): Promise<{ in_wishlist: boolean }> => {
-    const res = await apiClient.get(`/api/v1/wishlist/items/${product_id}`);
+    const res = await userClient.get(`/api/v1/wishlist/items/${product_id}`);
     return res.data;
   },
 
   toggle: async (product_id: string): Promise<{ item: WishlistItem }> => {
-    const res = await apiClient.post('/api/v1/wishlist/toggle', { product_id });
+    const res = await userClient.post('/api/v1/wishlist/toggle', { product_id });
     return res.data;
   },
 
   remove: async (product_id: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/wishlist/items/${product_id}`);
+    await userClient.delete(`/api/v1/wishlist/items/${product_id}`);
   },
 };
