@@ -1,5 +1,5 @@
 import type { Product } from '../types'
-import { apiClient } from './client'
+import { productClient } from './client'
 
 export interface ListProductsParams {
   category_id?: number;
@@ -13,17 +13,17 @@ export interface ListProductsParams {
 
 export const productsApi = {
   list: async (params: ListProductsParams = {}): Promise<{ products: Product[]; total: number }> => {
-    const res = await apiClient.get('/api/v1/products', { params });
+    const res = await productClient.get('/api/v1/products', { params });
     return res.data;
   },
 
   get: async (id: string): Promise<{ product: Product }> => {
-    const res = await apiClient.get(`/api/v1/products/${id}`);
+    const res = await productClient.get(`/api/v1/products/${id}`);
     return res.data;
   },
 
   search: async (query: string, limit = 20, offset = 0): Promise<{ products: Product[]; total: number }> => {
-    const res = await apiClient.get('/api/v1/products/search', { params: { query, limit, offset } });
+    const res = await productClient.get('/api/v1/products/search', { params: { query, limit, offset } });
     return res.data;
   },
 
@@ -34,7 +34,7 @@ export const productsApi = {
     price: number;
     tags: string[];
   }): Promise<{ product: Product }> => {
-    const res = await apiClient.post('/api/v1/products', data);
+    const res = await productClient.post('/api/v1/products', data);
     return res.data;
   },
 
@@ -42,11 +42,11 @@ export const productsApi = {
     id: string,
     data: Partial<{ title: string; description: string; price: number; tags: string[]; status: string }>
   ): Promise<{ product: Product }> => {
-    const res = await apiClient.patch(`/api/v1/products/${id}`, data);
+    const res = await productClient.patch(`/api/v1/products/${id}`, data);
     return res.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/products/${id}`);
+    await productClient.delete(`/api/v1/products/${id}`);
   },
 };

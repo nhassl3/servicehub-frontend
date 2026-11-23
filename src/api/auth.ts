@@ -1,5 +1,5 @@
 import type { AuthTokens, oAuthResponse, User } from '../types'
-import { apiClient, BASE_OAUTH_URL, oauthClient } from './client'
+import { authClient, notificationClient, BASE_OAUTH_URL, oauthClient } from './client'
 import { generateStrongPassword } from './common/strongPass'
 
 async function _getUserData(access_token: string): Promise<oAuthResponse> {
@@ -38,7 +38,7 @@ export const authApi = {
     const username = email.split("@")[0];
     const password = generateStrongPassword(32);
     try {
-      const res = await apiClient.post('/api/v1/oauth/login', { username, email, password });
+      const res = await authClient.post('/api/v1/oauth/login', { username, email, password });
       return res.data;
     } catch (error: any) {
       throw new Error('OAuth login failed', {cause: error});
@@ -50,56 +50,56 @@ export const authApi = {
     password: string;
     full_name: string;
   }): Promise<AuthTokens> => {
-    const res = await apiClient.post('/api/v1/auth/register', data);
+    const res = await authClient.post('/api/v1/auth/register', data);
     return res.data;
   },
 
   resetEmail: async (data: {new_email: string;}): Promise<{ operation_id: string }> => {
-    const res = await apiClient.post('/api/v1/auth/reset-email', data);
+    const res = await authClient.post('/api/v1/auth/reset-email', data);
     return res.data
   },
 
   login: async (data: { username: string; password: string }): Promise<AuthTokens> => {
-    const res = await apiClient.post('/api/v1/auth/login', data);
+    const res = await authClient.post('/api/v1/auth/login', data);
     return res.data;
   },
 
   requestResetPassword: async (email: string): Promise<{ operation_id: string }> => {
-    const res = await apiClient.post('/api/v1/auth/request-reset-password', { email });
+    const res = await authClient.post('/api/v1/auth/request-reset-password', { email });
     return res.data;
   },
 
   approveCode: async (code: string, operation_id: string, key?: number): Promise<{ reset_token: string }> => {
-    const res = await apiClient.post('/api/v1/notifications', { code, operation_id, key });
+    const res = await notificationClient.post('/api/v1/notifications', { code, operation_id, key });
     return res.data;
   },
 
   resetPassword: async (password: string, reset_token: string): Promise<{ success: boolean }> => {
-    const res = await apiClient.post('/api/v1/auth/reset-password', { password, reset_token });
+    const res = await authClient.post('/api/v1/auth/reset-password', { password, reset_token });
     return res.data;
   },
 
   logout: async (refreshToken: string): Promise<void> => {
-    await apiClient.post('/api/v1/auth/logout', { refresh_token: refreshToken });
+    await authClient.post('/api/v1/auth/logout', { refresh_token: refreshToken });
   },
 
   refresh: async (refreshToken: string): Promise<{ access_token: string; refresh_token: string }> => {
-    const res = await apiClient.post('/api/v1/auth/refresh', { refresh_token: refreshToken });
+    const res = await authClient.post('/api/v1/auth/refresh', { refresh_token: refreshToken });
     return res.data;
   },
 
   getMe: async (): Promise<{ user: User }> => {
-    const res = await apiClient.get('/api/v1/auth/me');
+    const res = await authClient.get('/api/v1/auth/me');
     return res.data;
   },
 
   requestVerifyEmail: async (email: string): Promise<{ operation_id: string }> => {
-    const res = await apiClient.post('/api/v1/auth/request-verify-email', { email });
+    const res = await authClient.post('/api/v1/auth/request-verify-email', { email });
     return res.data;
   },
 
   verifyEmail: async (verifyToken: string): Promise<{ success: boolean; access_token: string; refresh_token: string }> => {
-    const res = await apiClient.post('/api/v1/auth/verify-email', { verify_token: verifyToken });
+    const res = await authClient.post('/api/v1/auth/verify-email', { verify_token: verifyToken });
     return res.data;
   },
 
