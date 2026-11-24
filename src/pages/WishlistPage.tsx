@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { wishlistApi } from '../api/wishlist';
-import type { WishlistItem } from '../types';
-import './WishlistPage.css';
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { wishlistApi } from '../api/wishlist'
+import type { WishlistItem } from '../types'
+import './WishlistPage.css'
 
 export function WishlistPage() {
   const { t } = useTranslation();

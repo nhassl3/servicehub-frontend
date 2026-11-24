@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { authApi } from '../api/auth'
+import { userApi } from '../api/users'
 import { useAuth } from '../context/AuthContext'
 import { tokenStorage } from '../store/tokenStorage'
 import './EmailVerificationPage.css'
@@ -46,7 +46,7 @@ export function EmailVerificationPage() {
     if (!user?.email) return;
     if (sessionStorage.getItem(SENT_KEY)) return;
     sessionStorage.setItem(SENT_KEY, '1');
-    authApi.requestVerifyEmail(user.email).then((res) => {
+    userApi.requestVerifyEmail(user.email).then((res) => {
       setOperationId(res.operation_id);
       setCooldown(60);
     }).catch(() => {});
@@ -57,7 +57,7 @@ export function EmailVerificationPage() {
     setResendLoading(true);
     setError(false);
     try {
-      const res = await authApi.requestVerifyEmail(user.email);
+      const res = await userApi.requestVerifyEmail(user.email);
       setOperationId(res.operation_id);
       setDigits(Array(6).fill(''));
       setCooldown(60);
@@ -72,8 +72,8 @@ export function EmailVerificationPage() {
     if (!operationId) return;
     setLoading(true);
     try {
-      const { reset_token: verifyToken } = await authApi.approveCode(code, operationId, VERIFY_EMAIL_KEY);
-      const { success, access_token, refresh_token } = await authApi.verifyEmail(verifyToken);
+      const { reset_token: verifyToken } = await userApi.approveCode(code, operationId, VERIFY_EMAIL_KEY);
+      const { success, access_token, refresh_token } = await userApi.verifyEmail(verifyToken);
       if (success) {
         tokenStorage.setTokens(access_token, refresh_token);
       }
@@ -92,7 +92,7 @@ export function EmailVerificationPage() {
     if (!showChangeEmailModal) return;
     setLoading(true);
     try {
-      const { operation_id } = await authApi.resetEmail({new_email: newEmail});
+      const { operation_id } = await userApi.resetEmail({new_email: newEmail});
       setShowChangeEmailModal(false);
       setOperationId(operation_id);
       setChangeEmail(false);

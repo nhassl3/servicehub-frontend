@@ -2,7 +2,7 @@ import { AxiosError } from 'axios'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { authApi } from '../api/auth'
+import { userApi } from '../api/users'
 import './AuthPage.css'
 
 const PATTERNS = {
@@ -63,7 +63,7 @@ export function ResetPasswordPage() {
     setServerError('');
     setLoading(true);
     try {
-      await authApi.resetPassword(form.password, resetToken);
+      await userApi.resetPassword(form.password, resetToken);
       navigate('/login', { replace: true });
     } catch (err: unknown) {
       const error = err as AxiosError<{ message?: string }>;

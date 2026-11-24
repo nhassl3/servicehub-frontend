@@ -1,5 +1,5 @@
 import type { AuthTokens, oAuthResponse, User } from '../types'
-import { authClient, notificationClient, BASE_OAUTH_URL, oauthClient } from './client'
+import { authClient, BASE_OAUTH_URL, oauthClient } from './client'
 import { generateStrongPassword } from './common/strongPass'
 
 async function _getUserData(access_token: string): Promise<oAuthResponse> {
@@ -54,28 +54,8 @@ export const authApi = {
     return res.data;
   },
 
-  resetEmail: async (data: {new_email: string;}): Promise<{ operation_id: string }> => {
-    const res = await authClient.post('/api/v1/auth/reset-email', data);
-    return res.data
-  },
-
   login: async (data: { username: string; password: string }): Promise<AuthTokens> => {
     const res = await authClient.post('/api/v1/auth/login', data);
-    return res.data;
-  },
-
-  requestResetPassword: async (email: string): Promise<{ operation_id: string }> => {
-    const res = await authClient.post('/api/v1/auth/request-reset-password', { email });
-    return res.data;
-  },
-
-  approveCode: async (code: string, operation_id: string, key?: number): Promise<{ reset_token: string }> => {
-    const res = await notificationClient.post('/api/v1/notifications', { code, operation_id, key });
-    return res.data;
-  },
-
-  resetPassword: async (password: string, reset_token: string): Promise<{ success: boolean }> => {
-    const res = await authClient.post('/api/v1/auth/reset-password', { password, reset_token });
     return res.data;
   },
 
@@ -92,15 +72,4 @@ export const authApi = {
     const res = await authClient.get('/api/v1/auth/me');
     return res.data;
   },
-
-  requestVerifyEmail: async (email: string): Promise<{ operation_id: string }> => {
-    const res = await authClient.post('/api/v1/auth/request-verify-email', { email });
-    return res.data;
-  },
-
-  verifyEmail: async (verifyToken: string): Promise<{ success: boolean; access_token: string; refresh_token: string }> => {
-    const res = await authClient.post('/api/v1/auth/verify-email', { verify_token: verifyToken });
-    return res.data;
-  },
-
 };
