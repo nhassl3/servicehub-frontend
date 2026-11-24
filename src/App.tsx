@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
@@ -23,6 +24,10 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SellerDashboardPage } from './pages/SellerDashboardPage'
 import { SellerProfilePage } from './pages/SellerProfilePage'
 import { WishlistPage } from './pages/WishlistPage'
+
+const HomePreview = import.meta.env.DEV
+  ? lazy(() => import('./pages/HomePreview').then(({ HomePreview }) => ({ default: HomePreview })))
+  : null
 
 // Guard: redirect to /login if not authenticated, or to /verify-email if email not verified
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -53,9 +58,15 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      {HomePreview && (
+        <Route path="preview/2.0" element={<Suspense><HomePreview /></Suspense>} />
+      )}
       <Route element={<Layout />}>
         {/* Public */}
-        <Route index element={<HomePage />} />
+        <Route index element={<>
+          {import.meta.env.DEV && <div className="container"><Link className="btn btn-secondary" to="/preview/2.0">Открыть прототип ServiceHub 2.0</Link></div>}
+          <HomePage />
+        </>} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="sellers/:username" element={<SellerProfilePage />} />
