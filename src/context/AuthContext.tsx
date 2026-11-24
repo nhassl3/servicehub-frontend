@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios'
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { authApi, oauthApi } from '../api/auth'
+import { userApi } from '../api/users'
 import { tokenStorage } from '../store/tokenStorage'
 import type { User } from '../types'
 
@@ -207,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [cacheUser]);
 
   const resetPassword = useCallback(async (resetToken: string, newPassword: string) => {
-    await authApi.resetPassword(newPassword, resetToken);
+    await userApi.resetPassword(newPassword, resetToken);
   }, []);
 
   const register = useCallback(async (data: {

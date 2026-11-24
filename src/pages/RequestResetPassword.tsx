@@ -3,7 +3,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FaArrowLeft } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
-import { authApi } from '../api/auth'
+import { userApi } from '../api/users'
 import './AuthPage.css'
 
 const PATTERNS = {
@@ -98,7 +98,7 @@ export function RequestResetPasswordPage() {
     setServerError('');
     setLoading(true);
     try {
-      const result = await authApi.requestResetPassword(email);
+      const result = await userApi.requestResetPassword(email);
       setOperationId(result.operation_id);
       setStep('code');
     } catch (err: unknown) {
@@ -121,7 +121,7 @@ export function RequestResetPasswordPage() {
     setServerError('');
     setLoading(true);
     try {
-      const result = await authApi.approveCode(code, operationId);
+      const result = await userApi.approveCode(code, operationId);
       if (result.reset_token === null || result.reset_token === undefined || result.reset_token === '' || result.reset_token === 'null' || result.reset_token === 'undefined') {
         setServerError(t('requestResetPassword.codeFailed'));
         return;
