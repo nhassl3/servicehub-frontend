@@ -1,275 +1,272 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent, MouseEvent, PointerEvent } from 'react'
-import { FiArrowDown, FiArrowLeft, FiArrowRight, FiCheckCircle, FiClock, FiLock, FiMessageSquare, FiSearch } from 'react-icons/fi'
+import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
+import {
+  FiAperture, FiArrowDown, FiArrowLeft, FiArrowRight, FiArrowUpRight, FiBox,
+  FiCheck, FiCheckCircle, FiChevronRight, FiCode, FiDatabase, FiLock, FiMenu,
+  FiSearch, FiTerminal, FiX,
+} from 'react-icons/fi'
 import { Link, useNavigate } from 'react-router-dom'
+import { ParticleArt, ParticleField } from '../components/home-preview/ParticleArt'
 import { Footer } from '../components/layout/Footer'
-import apiPhoto from '../assets/home-preview/api.jpg'
-import dataPhoto from '../assets/home-preview/data.jpg'
-import scriptsPhoto from '../assets/home-preview/scripts.jpg'
-import workspacePhoto from '../assets/home-preview/workspace.jpg'
+import { useAuth } from '../context/AuthContext'
+import en from '../i18n/locales/en/homePreview.json'
+import ru from '../i18n/locales/ru/homePreview.json'
 import './HomePreview.css'
 
-const searchExamples = ['API для сайта', 'Парсер цен', 'Скрипт для Excel']
+// Keep the prototype's copy in its lazy-loaded route.
+i18n.addResourceBundle('en', 'homePreview', en)
+i18n.addResourceBundle('ru', 'homePreview', ru)
 
-const benefits = [
-  { Icon: FiCheckCircle, title: 'Проверяем перед публикацией', description: 'Администратор проверяет услугу до того, как она появится в каталоге.' },
-  { Icon: FiClock, title: 'Находите готовый инструмент', description: 'Сравните предложения и оформите заказ через ServiceHub.' },
-  { Icon: FiLock, title: 'Резервируем оплату', description: 'Деньги остаются в резерве до завершения сделки.' },
-]
+const categories = [
+  { key: 'api', slug: 'api-services', Icon: FiCode },
+  { key: 'parsers', slug: 'parsers', Icon: FiDatabase },
+  { key: 'scripts', slug: 'scripts', Icon: FiTerminal },
+] as const
 
-const reviews = [
-  { quote: 'Подобрали API для проекта и проверили документацию перед покупкой.', role: 'Интеграция', initials: 'И' },
-  { quote: 'Готовый скрипт помог убрать ручную работу с таблицами.', role: 'Автоматизация', initials: 'А' },
-  { quote: 'В описании парсера сразу было понятно, какие данные можно выгрузить.', role: 'Сбор данных', initials: 'С' },
-]
+const steps = [
+  { key: 'choose', status: 'selected', Icon: FiBox },
+  { key: 'pay', status: 'paid', Icon: FiLock },
+  { key: 'track', status: 'delivered', Icon: FiCheckCircle },
+] as const
 
-const products = [
-  { title: 'API для интеграций', category: 'API-сервисы', query: 'API', hit: true, price: '990', photo: apiPhoto, description: 'Подключайте данные и сервисы к своим приложениям.' },
-  { title: 'Парсер маркетплейсов', category: 'Парсеры', query: 'парсер', hit: false, price: '1 490', photo: dataPhoto, description: 'Собирайте цены, остатки и характеристики товаров.' },
-  { title: 'Скрипты для автоматизации', category: 'Скрипты', query: 'скрипт', hit: false, price: '790', photo: scriptsPhoto, description: 'Убирайте ручные операции с файлами и таблицами.' },
-]
+const examples = [
+  { key: 'currency', query: 'api' },
+  { key: 'prices', query: 'parser' },
+  { key: 'tables', query: 'script' },
+] as const
 
-function catalogUrl(query = '') {
-  return query ? '/catalog?' + new URLSearchParams({ q: query }).toString() : '/catalog'
+function searchUrl(query: string) {
+  return query ? '/catalog?' + new URLSearchParams({ q: query }) : '/catalog'
 }
 
-function trackBorderLight(event: PointerEvent<HTMLDivElement>) {
-  if (event.pointerType !== 'mouse' || !(event.target instanceof Element) || event.target.closest('.sh-preview__header, footer')) return
-
-  for (let surface = event.target.closest<HTMLElement>('a, button, form');
-    surface && event.currentTarget.contains(surface);
-    surface = surface.parentElement?.closest<HTMLElement>('a, button, form') ?? null) {
-    const { left, top } = surface.getBoundingClientRect()
-    surface.dataset.pointerLight = 'true'
-    surface.style.setProperty('--pointer-x', `${event.clientX - left}px`)
-    surface.style.setProperty('--pointer-y', `${event.clientY - top}px`)
-  }
+function LanguageSwitch() {
+  const { t, i18n } = useTranslation('homePreview')
+  return (
+    <div className="pv-lang" role="group" aria-label={t('nav.language')}>
+      {(['ru', 'en'] as const).map(language => (
+        <button key={language} type="button" lang={language} aria-label={language === 'ru' ? 'Русский' : 'English'}
+          aria-pressed={i18n.resolvedLanguage === language} onClick={() => void i18n.changeLanguage(language)}>
+          {language.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  )
 }
 
-function scrollToSection(event: MouseEvent<HTMLDivElement>) {
-  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-  const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#preview-"]') : null
-  const section = link && document.getElementById(link.hash.slice(1))
-  if (!section || !link) return
-  event.preventDefault()
-  if (location.hash !== link.hash) history.pushState(history.state, '', link.hash)
-  section.tabIndex = -1
-  section.focus({ preventScroll: true })
-  section.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+function PreviewHeader() {
+  const { t } = useTranslation('homePreview')
+  const { isAuthenticated } = useAuth()
+  const [open, setOpen] = useState(false)
+  const menuButton = useRef<HTMLButtonElement>(null)
+  const firstLink = useRef<HTMLAnchorElement>(null)
+
+  useEffect(() => {
+    if (open) firstLink.current?.focus({ preventScroll: true })
+  }, [open])
+
+  return (
+    <header className="pv-header"
+      onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false) }}
+      onKeyDown={event => {
+        if (open && event.key === 'Escape') {
+          setOpen(false)
+          menuButton.current?.focus()
+        }
+      }}>
+      <div className="pv-shell pv-header__inner">
+        <a className="pv-brand" href="#preview-top" onClick={() => setOpen(false)}>
+          <FiAperture aria-hidden="true" />ServiceHub
+        </a>
+        <nav className="pv-nav" id="preview-nav" aria-label={t('nav.label')} data-open={open}>
+          <Link ref={firstLink} to="/catalog" onClick={() => setOpen(false)}>{t('translation:header.catalog')}</Link>
+          <a href="#preview-about" onClick={() => setOpen(false)}>{t('nav.how')}</a>
+          <a href="#preview-seller" onClick={() => setOpen(false)}>{t('nav.sellers')}</a>
+        </nav>
+        <div className="pv-header__actions">
+          <LanguageSwitch />
+          <Link className="pv-account" to={isAuthenticated ? '/profile' : '/login'}>
+            {t(isAuthenticated ? 'translation:footer.profile' : 'translation:header.login')}
+            <FiArrowUpRight aria-hidden="true" />
+          </Link>
+          <button className="pv-menu" type="button" ref={menuButton} aria-label={t('nav.menu')}
+            aria-controls="preview-nav" aria-expanded={open} onClick={() => setOpen(value => !value)}>
+            {open ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
+          </button>
+        </div>
+      </div>
+    </header>
+  )
 }
 
-function Search() {
-  const [query, setQuery] = useState('')
-  const [focused, setFocused] = useState(false)
+function HeroSearch() {
+  const { t } = useTranslation('homePreview')
   const navigate = useNavigate()
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    navigate(catalogUrl(query.trim()))
+    const value = new FormData(event.currentTarget).get('q')
+    navigate(searchUrl(typeof value === 'string' ? value.trim() : ''))
   }
 
   return (
-    <form className="sh-preview__search" role="search" onSubmit={submit}>
-      <FiSearch aria-hidden="true" />
-      <div className="sh-preview__search-field">
-        <input aria-label="Поиск по каталогу" type="search" value={query}
-          placeholder="Поиск по каталогу"
-          onChange={event => setQuery(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />
-        {!focused && !query && (
-          <div className="sh-preview__ticker" aria-hidden="true">
-            <div className="sh-preview__ticker-track">
-              {[0, 1].map(copy => <span key={copy}>{searchExamples.join('     ·     ')}{'     ·     '}</span>)}
-            </div>
-          </div>
-        )}
-      </div>
-      <button className="sh-preview__button" type="submit">Найти</button>
-    </form>
-  )
-}
-
-function HeroBackground() {
-  const sky = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const element = sky.current
-    if (!element || !('IntersectionObserver' in window)) return
-    const observer = new IntersectionObserver(([entry]) => {
-      element.dataset.visible = String(entry.isIntersecting)
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
-
-  return <div className="sh-preview__sky" ref={sky} aria-hidden="true"><div /><div /><div /></div>
-}
-
-function ReviewStack() {
-  const [active, setActive] = useState(0)
-
-  function advance(direction: number) {
-    setActive(current => (current + direction + reviews.length) % reviews.length)
-  }
-
-  return (
-    <div className="sh-preview__reviews-layout sh-preview__wrap">
-      <div className="sh-preview__reviews-copy">
-        <h2 id="preview-reviews-title">Отзывы о покупках</h2>
-        <p>Примеры отзывов об инструментах из каталога.</p>
-      </div>
-      <div className="sh-preview__review-panel">
-        <div className="sh-preview__review-stack" id="preview-review-stack" aria-live="polite">
-          {reviews.map((review, index) => {
-            const depth = (index - active + reviews.length) % reviews.length
-            return (
-              <figure className="sh-preview__review" key={review.role} data-depth={depth} aria-hidden={depth !== 0}>
-                <FiMessageSquare aria-hidden="true" />
-                <blockquote>{review.quote}</blockquote>
-                <figcaption><span aria-hidden="true">{review.initials}</span>{review.role}</figcaption>
-              </figure>
-            )
-          })}
-        </div>
-        <div className="sh-preview__review-controls">
-          <button className="sh-preview__button sh-preview__button--outline" type="button" aria-label="Предыдущий отзыв"
-            aria-controls="preview-review-stack" onClick={() => advance(-1)}><FiArrowLeft aria-hidden="true" /></button>
-          <span aria-hidden="true">{active + 1} / {reviews.length}</span>
-          <button className="sh-preview__button sh-preview__button--outline" type="button" aria-label="Следующий отзыв"
-            aria-controls="preview-review-stack" onClick={() => advance(1)}><FiArrowRight aria-hidden="true" /></button>
-        </div>
+    <div className="pv-search">
+      <form action="/catalog" role="search" onSubmit={submit}>
+        <FiSearch aria-hidden="true" />
+        <input name="q" type="search" aria-label={t('hero.searchLabel')} placeholder={t('hero.placeholder')} />
+        <button className="pv-button" type="submit">{t('translation:home.search')}<FiArrowRight aria-hidden="true" /></button>
+      </form>
+      <div className="pv-search__examples">
+        <span>{t('hero.examples')}</span>
+        {examples.map(({ query }) => (
+          <Link key={query} to={searchUrl(t(`hero.${query}`))}>{t(`hero.${query}`)}</Link>
+        ))}
       </div>
     </div>
   )
 }
 
-function SectionBridge() {
-  return <div className="sh-preview__bridge" aria-hidden="true"><span /></div>
+function CatalogShowcase() {
+  const { t } = useTranslation('homePreview')
+  return (
+    <section className="pv-catalog pv-shell" id="preview-products" aria-labelledby="preview-products-title" tabIndex={-1}>
+      <div className="pv-section-head">
+        <h2 id="preview-products-title">{t('catalog.title')}</h2>
+        <Link className="pv-text-link" to="/catalog">{t('catalog.all')}<FiArrowUpRight aria-hidden="true" /></Link>
+      </div>
+      <div className="pv-tiles">
+        {categories.map(({ key, slug, Icon }) => (
+          <Link className={`pv-tile pv-tile--${key}`} key={key} to={`/catalog?category=${slug}`}>
+            <div className="pv-tile__art"><ParticleArt shape={key} /></div>
+            <div className="pv-tile__heading">
+              <Icon aria-hidden="true" /><h3>{t(`catalog.${key}.title`)}</h3>
+              <FiArrowUpRight className="pv-tile__arrow" aria-hidden="true" />
+            </div>
+            <p>{t(`catalog.${key}.description`)}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function BuyingGuide() {
+  const { t } = useTranslation('homePreview')
+  const [active, setActive] = useState(0)
+
+  return (
+    <section className="pv-guide pv-shell" id="preview-about" aria-labelledby="preview-about-title" tabIndex={-1}>
+      <div className="pv-guide__copy">
+        <h2 id="preview-about-title">{t('how.title')}</h2>
+        <div className="pv-steps" role="group" aria-labelledby="preview-about-title">
+          {steps.map(({ key }, index) => (
+            <button className="pv-step" type="button" key={key} aria-pressed={active === index}
+              aria-controls="preview-order" onClick={() => setActive(index)}>
+              <span className="pv-step__number">{index + 1}</span>
+              <span className="pv-step__copy">
+                <span>{t(`how.${key}.title`)}</span>
+                {active === index && <span className="pv-step__detail">{t(`how.${key}.description`)}</span>}
+              </span>
+              <FiChevronRight aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="pv-stage" id="preview-order">
+        <div className="pv-ticket">
+          <div className="pv-ticket__brand"><FiAperture aria-hidden="true" />ServiceHub</div>
+          <p className="pv-ticket__caption">{t('how.sample')}</p>
+          <h3>{t('how.product')}</h3>
+          <ol className="pv-ticket__timeline">
+            {steps.map(({ key, status, Icon }, index) => (
+              <li key={key} data-reached={index <= active} aria-current={index === active ? 'step' : undefined}>
+                <span>{index < active ? <FiCheck aria-hidden="true" /> : <Icon aria-hidden="true" />}</span>
+                {t(`how.${status}`)}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function UseCases() {
+  const { t } = useTranslation('homePreview')
+  const [active, setActive] = useState(0)
+  const example = examples[active]
+
+  function move(direction: number) {
+    setActive(index => (index + direction + examples.length) % examples.length)
+  }
+
+  return (
+    <section className="pv-cases pv-shell" id="preview-reviews" aria-labelledby="preview-cases-title" tabIndex={-1}>
+      <h2 id="preview-cases-title">{t('cases.title')}</h2>
+      <div className="pv-cases__body">
+        <div id="preview-example" aria-live="polite" aria-atomic="true">
+          <p className="pv-cases__text" key={example.key}>{t(`cases.${example.key}`)}</p>
+        </div>
+        <div className="pv-cases__actions">
+          <Link className="pv-text-link" to={searchUrl(t(`hero.${example.query}`))}>{t('cases.find')}<FiArrowUpRight aria-hidden="true" /></Link>
+          <div className="pv-cases__controls">
+            <button type="button" aria-label={t('cases.previous')} aria-controls="preview-example" onClick={() => move(-1)}><FiArrowLeft /></button>
+            <span aria-hidden="true">{active + 1} / {examples.length}</span>
+            <button type="button" aria-label={t('cases.next')} aria-controls="preview-example" onClick={() => move(1)}><FiArrowRight /></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export function HomePreview() {
-  const page = useRef<HTMLDivElement>(null)
+  const { t, i18n } = useTranslation('homePreview')
+  const { user } = useAuth()
+  const seller = user?.role === 'seller'
 
   useEffect(() => {
-    const panels = page.current?.querySelectorAll<HTMLElement>('.sh-preview__section:not(.sh-preview__hero) > .sh-preview__wrap')
-    if (!panels || !('IntersectionObserver' in window)) return
-    const bridges = page.current?.querySelectorAll<HTMLElement>('.sh-preview__bridge')
-
-    const observer = new IntersectionObserver(entries => {
-      for (const { isIntersecting, target } of entries) {
-        if (target instanceof HTMLElement && target.classList.contains('sh-preview__bridge')) {
-          target.toggleAttribute('data-crossing', isIntersecting)
-          continue
-        }
-        const section = target.parentElement
-        if (!section) continue
-        if (isIntersecting) {
-          section.dataset.reveal = 'entered'
-          observer.unobserve(target)
-        } else if (!section.dataset.reveal) {
-          section.dataset.reveal = 'pending'
-        }
-      }
-    }, { rootMargin: '0px 0px -12% 0px' })
-    panels.forEach(panel => observer.observe(panel))
-    bridges?.forEach(bridge => observer.observe(bridge))
-    return () => observer.disconnect()
+    // Vite loads this route lazily, after the browser's initial fragment lookup.
+    const { hash } = window.location
+    if (hash.startsWith('#preview-')) {
+      const target = document.getElementById(hash.slice(1))
+      target?.focus({ preventScroll: true })
+      target?.scrollIntoView({ behavior: 'instant' })
+    }
   }, [])
 
   return (
-    <div className="sh-preview" ref={page} onClick={scrollToSection} onPointerMove={trackBorderLight}>
-      <header className="sh-preview__header">
-        <div className="sh-preview__top sh-preview__wrap">
-          <Link className="sh-preview__brand" to="/preview/2.0">Service<span>Hub</span></Link>
-          <nav aria-label="Главное меню">
-            <Link to="/catalog">Каталог</Link>
-            <a href="#preview-seller">Продавцам</a>
-            <Link to="/login">Войти</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="pv" id="preview-top" lang={i18n.resolvedLanguage}>
+      <PreviewHeader />
       <main>
-        <section className="sh-preview__section sh-preview__hero" aria-labelledby="preview-title">
-          <HeroBackground />
-          <div className="sh-preview__wrap sh-preview__hero-content">
-            <h1 id="preview-title">Найдите инструмент{' '}<br />для <em>своей задачи</em></h1>
-            <p>API, парсеры, скрипты и цифровые услуги в одном каталоге.</p>
-            <Search />
-            <div className="sh-preview__hero-links">
-              <Link to="/catalog">Открыть каталог <FiArrowRight aria-hidden="true" /></Link>
-              <a href="#preview-about">Как это работает <FiArrowDown aria-hidden="true" /></a>
+        <section className="pv-hero" aria-labelledby="preview-title">
+          <ParticleField />
+          <div className="pv-hero__art" aria-hidden="true"><ParticleArt shape="hub" /></div>
+          <div className="pv-shell pv-hero__inner">
+            <div className="pv-hero__copy">
+              <h1 id="preview-title">{t('hero.first')}<br />{t('hero.second')}</h1>
+              <p>{t('hero.description')}</p>
+              <HeroSearch />
             </div>
           </div>
-          <div className="sh-preview__hero-base sh-preview__wrap">
-            <span><FiLock aria-hidden="true" /> Защита оплаты</span>
-            <span><FiCheckCircle aria-hidden="true" /> Модерация услуг</span>
-          </div>
+          <a className="pv-hero__down" href="#preview-products" aria-label={t('catalog.title')}><FiArrowDown aria-hidden="true" /></a>
         </section>
-
-        <section className="sh-preview__section sh-preview__about" id="preview-about" aria-labelledby="preview-about-title">
-          <SectionBridge />
-          <div className="sh-preview__wrap sh-preview__split">
-            <div>
-              <h2 id="preview-about-title">Покупайте с уверенностью</h2>
-              <p>ServiceHub объединяет каталог цифровых инструментов и безопасное оформление сделки.</p>
-              <Link className="sh-preview__button sh-preview__button--outline" to="/catalog">Посмотреть каталог <FiArrowRight aria-hidden="true" /></Link>
-            </div>
-            <ol className="sh-preview__benefits">
-              {benefits.map(({ Icon, title, description }) => (
-                <li key={title}><Icon aria-hidden="true" /><div><h3>{title}</h3><p>{description}</p></div></li>
-              ))}
-            </ol>
-          </div>
-          <a className="sh-preview__next" href="#preview-reviews">Отзывы <FiArrowDown aria-hidden="true" /></a>
-        </section>
-
-        <section className="sh-preview__section sh-preview__reviews" id="preview-reviews" aria-labelledby="preview-reviews-title">
-          <SectionBridge />
-          <ReviewStack />
-          <a className="sh-preview__next" href="#preview-products">Популярные товары <FiArrowDown aria-hidden="true" /></a>
-        </section>
-
-        <section className="sh-preview__section sh-preview__products" id="preview-products" aria-labelledby="preview-products-title">
-          <SectionBridge />
-          <div className="sh-preview__wrap">
-            <div className="sh-preview__section-head">
-              <div><h2 id="preview-products-title">Популярное в каталоге</h2><p>Примеры товаров и цен для прототипа.</p></div>
-              <Link className="sh-preview__button sh-preview__button--outline" to="/catalog">Весь каталог <FiArrowRight aria-hidden="true" /></Link>
-            </div>
-            <div className="sh-preview__grid sh-preview__product-grid">
-              {products.map(product => (
-                <Link className="sh-preview__product" key={product.title} to={catalogUrl(product.query)}>
-                  <div className="sh-preview__product-image">
-                    <img src={product.photo} width="720" height="440" alt="" loading="lazy" />
-                  </div>
-                  <div className="sh-preview__product-info">
-                    <span>{product.category}</span>
-                    <h3>{product.title}</h3>
-                    <p>{product.description}</p>
-                    <div className="sh-preview__product-bottom">
-                      {product.hit && <span className="sh-preview__hit">Хит</span>}
-                      <strong>от {product.price} ₽</strong>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-          <a className="sh-preview__next" href="#preview-seller">Продавцам <FiArrowDown aria-hidden="true" /></a>
-        </section>
-
-        <section className="sh-preview__section sh-preview__seller" id="preview-seller" aria-labelledby="preview-seller-title">
-          <SectionBridge />
-          <div className="sh-preview__wrap sh-preview__split">
-            <div>
-              <h2 id="preview-seller-title">Продавайте на ServiceHub</h2>
-              <p>Размещайте свои API, скрипты и программы. После модерации предложение появится в каталоге.</p>
-              <Link className="sh-preview__button" to="/sellers/create">Стать продавцом <FiArrowRight aria-hidden="true" /></Link>
-            </div>
-            <img className="sh-preview__workspace" src={workspacePhoto} width="1100" height="850" alt="" loading="lazy" />
+        <CatalogShowcase />
+        <BuyingGuide />
+        <UseCases />
+        <section className="pv-seller" id="preview-seller" aria-labelledby="preview-seller-title" tabIndex={-1}>
+          <ParticleField />
+          <div className="pv-shell">
+            <h2 id="preview-seller-title">{t('seller.title')}</h2>
+            <p>{t('seller.description')}</p>
+            <Link className="pv-button" to={seller ? '/seller/dashboard' : '/sellers/create'}>
+              {t(seller ? 'seller.dashboard' : 'translation:footer.becomeSeller')}<FiArrowUpRight aria-hidden="true" />
+            </Link>
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer previewControls={<LanguageSwitch />} />
     </div>
   )
 }
