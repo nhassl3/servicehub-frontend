@@ -8,6 +8,10 @@
     "signUp": "Регистрация"
   },
   "footer": {
+    "apiServices": "API-сервисы",
+    "osintTools": "OSINT-инструменты",
+    "parsers": "Парсеры",
+    "scripts": "Скрипты",
     "tagline": "Цифровой маркетплейс для API, инструментов и сервисов.",
     "marketplace": "Маркетплейс",
     "allProducts": "Все товары",

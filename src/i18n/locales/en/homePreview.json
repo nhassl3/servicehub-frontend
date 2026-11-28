@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "label": "Homepage navigation",
+    "how": "How it works",
+    "sellers": "For sellers",
+    "menu": "Menu",
+    "language": "Page language"
+  },
+  "hero": {
+    "first": "Tools for your",
+    "second": "next project",
+    "description": "Find ready-to-use APIs, parsers and scripts from developers who build them.",
+    "placeholder": "What are you looking for?",
+    "searchLabel": "Search the tool catalog",
+    "examples": "Try",
+    "api": "Exchange rate API",
+    "parser": "Price parser",
+    "script": "Excel script"
+  },
+  "catalog": {
+    "title": "Explore the catalog",
+    "all": "Full catalog",
+    "api": { "title": "API services", "description": "Connect external data and services to your applications." },
+    "parsers": { "title": "Data parsers", "description": "Collect prices, stock levels and product details." },
+    "scripts": { "title": "Scripts", "description": "Automate tasks across files, spreadsheets and reports." }
+  },
+  "how": {
+    "title": "How buying works",
+    "choose": { "title": "Choose a tool", "description": "Read the product description, check the price and review the seller’s terms." },
+    "pay": { "title": "Place your order", "description": "Review the items and total in your cart, then pay from your ServiceHub balance." },
+    "track": { "title": "Track your order", "description": "Open My Orders to check the status, items and total for your purchase." },
+    "sample": "Sample order",
+    "product": "Exchange rate API",
+    "selected": "Tool selected",
+    "paid": "Payment received",
+    "delivered": "Order delivered"
+  },
+  "cases": {
+    "title": "What you can build",
+    "previous": "Previous example",
+    "next": "Next example",
+    "currency": "Show store prices in each customer’s currency.",
+    "prices": "Track price changes across marketplaces.",
+    "tables": "Build a weekly report from several spreadsheets.",
+    "find": "Find a tool"
+  },
+  "seller": {
+    "title": "List your tool",
+    "description": "Add a description, access terms and a price. Your tool will appear in the catalog after review.",
+    "dashboard": "Seller dashboard"
+  }
+}

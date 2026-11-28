@@ -8,6 +8,10 @@
     "signUp": "Sign Up"
   },
   "footer": {
+    "apiServices": "API Services",
+    "osintTools": "OSINT Tools",
+    "parsers": "Parsers",
+    "scripts": "Scripts",
     "tagline": "Digital marketplace for APIs, tools, and services.",
     "marketplace": "Marketplace",
     "allProducts": "All Products",
