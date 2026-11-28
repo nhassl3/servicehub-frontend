@@ -1,3 +1,8 @@
+# Misc
+tz.txt
+servicehub-frontend-ssh-key
+servicehub-frontend-ssh-key.pub
+
 # Logs
 logs
 *.log
